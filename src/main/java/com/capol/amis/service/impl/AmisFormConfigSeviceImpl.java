@@ -118,8 +118,8 @@ public class AmisFormConfigSeviceImpl implements IAmisFormConfigSevice {
         parseFormBody(formFields, gridFields, gridTableMap, formTable);
 
         // 处理主表数据
-        formTableHandle(subjectFormModel, formFields, formTable);
-        log.info("-->主表字段信息：" + JSONObject.toJSONString(formFields));
+        List<FormFieldConfigModel> formFieldConfigModels = formTableHandle(subjectFormModel, formFields);
+        log.info("-->主表字段信息：" + JSONObject.toJSONString(formFieldConfigModels));
 
         // 处理从表数据
 
@@ -153,21 +153,22 @@ public class AmisFormConfigSeviceImpl implements IAmisFormConfigSevice {
      *
      * @param subjectFormModel
      * @param formFields
-     * @param formTable
      */
-    private void formTableHandle(BusinessSubjectFormModel subjectFormModel, List<JSONObject> formFields, JSONObject formTable) {
+    private List<FormFieldConfigModel> formTableHandle(BusinessSubjectFormModel subjectFormModel, List<JSONObject> formFields) {
 
         //主表字段
         List<FormFieldConfigModel> mainFields = new ArrayList<>();
         //构建系统字段
         buildSystemFields(mainFields, subjectFormModel);
 
-        if (CollectionUtils.isNotEmpty(mainFields)) {
+        if (CollectionUtils.isNotEmpty(formFields)) {
             formFields.forEach(jsonObject -> {
                 //根据组件类型构建字段Model
-                buildFormFields(subjectFormModel.getSubjectId(), mainFields, formTable);
+                buildFormFields(subjectFormModel.getSubjectId(), mainFields, jsonObject);
             });
         }
+
+        return mainFields;
     }
 
     /**
@@ -273,7 +274,7 @@ public class AmisFormConfigSeviceImpl implements IAmisFormConfigSevice {
         } else {
             fieldConfigModel.setFieldAlias(jsonObject.getString("label"));
         }
-
+        fieldConfigModel.setFieldType(fieldEnum.getFieldType());
         fieldConfigModel.setFieldName(fieldName);
         fieldConfigModel.setFieldLength(fieldLength);
         fieldConfigModel.setComponentType(fieldEnum.getValue());

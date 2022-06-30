@@ -15,19 +15,15 @@ import java.util.Map;
 public class AmisUtil {
 
     public static final String BODY = "body";
-
     public static final String TYPE = "type";
 
     public static final String FORM = "form";
-
     public static final String PAGE = "page";
 
     public static final String PICKER = "picker";
-
     public static final String TREE_SELECT = "tree-select";
 
     public static final String VALIDATIONS = "validations";
-
     public static final String MAXLENGTH = "maxLength";
 
     /**

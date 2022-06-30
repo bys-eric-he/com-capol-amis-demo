@@ -7,7 +7,6 @@ public enum ComponentTypeEnum {
     /**
      * 表单项组件
      */
-
     TEXT("文本框", "text", 1),
     INPUT_TEXT("文本框", "input-text", 1),
     INPUT_EMAIL("企业报表", "input-email", 1),
@@ -31,7 +30,6 @@ public enum ComponentTypeEnum {
     /**
      * 容器组件
      */
-
     FORM("表单", "form", 0),
     INPUT_TABLE("表格编辑框", "input-table", 2),
     TABS("选项卡", "tabs", 3),
@@ -40,20 +38,17 @@ public enum ComponentTypeEnum {
     /**
      * 关联组件
      */
-
     PICKER("项目台账", "picker", 1),
     TREE_SELECT("组织架构组件", "tree-select", 1);
 
     /**
      * 组件名称
      */
-
     private String name;
 
     /**
      * 组件类型值
      */
-
     private String value;
 
     /**
@@ -67,7 +62,6 @@ public enum ComponentTypeEnum {
      * <p>
      * 3三栏，两栏，选项卡
      */
-
     private Integer type;
 
     ComponentTypeEnum(String name, String value, Integer type) {

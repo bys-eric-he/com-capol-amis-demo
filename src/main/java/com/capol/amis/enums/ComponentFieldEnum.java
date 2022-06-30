@@ -13,13 +13,13 @@ public enum ComponentFieldEnum {
     /**
      * 表单项组件
      */
-    TEXT("表格文本框", "text", 1, 1, "text", 0),
-    INPUT_TEXT("文本框", "input-text", 1, 1, "text", 0),
-    INPUT_EMAIL("邮箱", "input-email", 1, 1, "text", 0),
+    TEXT("表格文本框", "text", 1, 1, "text", 300),
+    INPUT_TEXT("文本框", "input-text", 1, 1, "text", 300),
+    INPUT_EMAIL("邮箱", "input-email", 1, 1, "text", 3000),
     TEXTAREA("多行文本框", "textarea", 1, 1, "text", 0),
-    SELECT("下拉框", "select", 2, 1, "text", 0),
-    CHECKBOXES("复选框", "radios", 2, 1, "text", 0),
-    RADIOS("单选框", "text", 2, 1, "text", 0),
+    SELECT("下拉框", "select", 2, 1, "varchar", 300),
+    CHECKBOXES("复选框", "radios", 2, 1, "varchar", 300),
+    RADIOS("单选框", "text", 2, 1, "varchar", 300),
     INPUT_DATE("日期框", "input-date", 3, 1, "varchar", 40),
     INPUT_MONTH("Month", "input-month", 3, 1, "varchar", 40),
     INPUT_QUARTER("Quarter", "input-quarter", 3, 1, "varchar", 40),
