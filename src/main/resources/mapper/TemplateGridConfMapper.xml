@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.capol.amis.mapper.TemplateGridConfMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.capol.amis.entity.TemplateGridConfDO">
+        <id column="id" property="id" />
+        <result column="enterprise_id" property="enterpriseId" />
+        <result column="project_id" property="projectId" />
+        <result column="subject_id" property="subjectId" />
+        <result column="field_key" property="fieldKey" />
+        <result column="field_alias" property="fieldAlias" />
+        <result column="field_name" property="fieldName" />
+        <result column="field_type" property="fieldType" />
+        <result column="field_order" property="fieldOrder" />
+        <result column="status" property="status" />
+        <result column="creator" property="creator" />
+        <result column="creator_id" property="creatorId" />
+        <result column="created_host_ip" property="createdHostIp" />
+        <result column="last_operator" property="lastOperator" />
+        <result column="last_operator_id" property="lastOperatorId" />
+        <result column="update_host_ip" property="updateHostIp" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id,
+        enterprise_id,
+        project_id,
+        subject_id,
+        field_key,
+        field_alias,
+        field_name,
+        field_type,
+        field_order,
+        status,
+        creator,
+        creator_id,
+        created_host_ip,
+        last_operator,
+        last_operator_id,
+        update_host_ip,
+        create_time,
+        update_time
+    </sql>
+
+</mapper>
