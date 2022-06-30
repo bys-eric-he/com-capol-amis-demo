@@ -69,6 +69,11 @@ public class BaseInfo implements Serializable {
     private String updateHostIp;
 
     /**
+     * 记录状态（0-已删除 1-正常）
+     */
+    private Integer status;
+
+    /**
      * 判断当前实体是否为新增
      *
      * @return
@@ -93,6 +98,7 @@ public class BaseInfo implements Serializable {
             this.createdHostIp = systemInfo.userIp;
             this.lastOperator = systemInfo.userName;
             this.lastOperatorId = systemInfo.userId;
+            this.status = 1;
         } else {
             this.updateHostIp = systemInfo.userIp;
             this.updateTime = systemInfo.updTime;

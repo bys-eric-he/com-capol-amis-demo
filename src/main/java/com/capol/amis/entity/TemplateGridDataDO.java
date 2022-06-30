@@ -76,9 +76,4 @@ public class TemplateGridDataDO extends BaseInfo {
      * 值hash
      */
     private Long fieldHashValue;
-
-    /**
-     * 1：正常，0：已删除
-     */
-    private Integer status;
 }

@@ -56,9 +56,4 @@ public class TemplateFormConfDO extends BaseInfo {
      * 字段顺序
      */
     private Integer fieldOrder;
-
-    /**
-     * 1：正常，0：已删除
-     */
-    private Integer status;
 }

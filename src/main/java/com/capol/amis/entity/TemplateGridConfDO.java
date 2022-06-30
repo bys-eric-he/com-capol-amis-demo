@@ -57,8 +57,4 @@ public class TemplateGridConfDO extends BaseInfo {
      */
     private Integer fieldOrder;
 
-    /**
-     * 1：正常，0：已删除
-     */
-    private Integer status;
 }

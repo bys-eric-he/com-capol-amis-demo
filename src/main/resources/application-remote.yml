@@ -1,0 +1,42 @@
+# mybatis-plus相关配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      field-strategy: NOT_EMPTY
+      db-type: MYSQL
+  configuration:
+    map-underscore-to-camel-case: true
+    call-setters-on-nulls: true
+    auto-mapping-behavior: full
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+repeatSubmit:
+  intervalTime: 15
+token:
+  header: REPEAT-SUBMIT-HEADER
+
+spring:
+  application:
+    name: CAPOL-AMIS-CONFIG-DEMO
+  #定义数据源
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://81.68.117.201:3306/db_amis_demo?useUnicode=true&characterEncoding=UTF8&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: 123321
+  redis:
+    timeout: 50000
+    database: 0
+    password: 123321
+    jedis:
+      pool:
+        max-active: 1024
+        max-wait: 20000
+        max-idle: 200
+        min-idle: 10
+    sentinel:
+      master: mymaster
+      nodes: 81.68.117.201:26380,81.68.117.201:26381,81.68.117.201:26382

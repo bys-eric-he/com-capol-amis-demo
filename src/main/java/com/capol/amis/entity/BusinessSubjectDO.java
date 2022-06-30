@@ -41,9 +41,4 @@ public class BusinessSubjectDO extends BaseInfo {
      * 业务主题表单配置JSON信息
      */
     private String configJson;
-
-    /**
-     * 记录状态（0-已删除 1-正常）
-     */
-    private Integer status;
 }

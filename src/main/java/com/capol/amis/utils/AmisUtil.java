@@ -9,7 +9,6 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class AmisUtil {
@@ -19,6 +18,11 @@ public class AmisUtil {
 
     public static final String FORM = "form";
     public static final String PAGE = "page";
+
+    public static final String TABS = "tabs";
+    public static final String GRID = "grid";
+
+    public static final String COLUMNS = "columns";
 
     public static final String PICKER = "picker";
     public static final String TREE_SELECT = "tree-select";
@@ -80,14 +84,9 @@ public class AmisUtil {
      * 解析表单
      *
      * @param formFields
-     * @param gridFields
-     * @param gridTableMap
      * @param formTable
      */
-    public static void parseFormBody(List<JSONObject> formFields,
-                                     Map<String, List<JSONObject>> gridFields,
-                                     Map<String, JSONObject> gridTableMap,
-                                     JSONObject formTable) {
+    public static void parseFormBody(List<JSONObject> formFields, JSONObject formTable) {
 
         JSONArray formBody = null;
         if (formTable != null) {
@@ -111,6 +110,7 @@ public class AmisUtil {
                 //表格编辑框
             } else if (CONTAINER_TYPE.contains(type)) {
                 //嵌套容器：三栏、两栏、选项卡
+                parseContainer(formFields, jsonObject, type);
             } else {
                 if (PAGE.equalsIgnoreCase(type)) {
                     JSONArray body = (JSONArray) jsonObject.get(BODY);
@@ -147,5 +147,131 @@ public class AmisUtil {
             return (Integer) validations.get(MAXLENGTH);
         }
         return null;
+    }
+
+    /**
+     * 解析容器类型组件，如三栏、两栏、选项卡
+     * 只支持解析两层
+     *
+     * @param formFields
+     * @param formTable
+     * @param type
+     */
+    private static void parseContainer(List<JSONObject> formFields, JSONObject formTable, String type) {
+        //容器组件嵌套层数，超过两层就不再处理
+        int count = 1;
+        log.info("---解析容器类型组件，如三栏、两栏、选项卡,只支持解析两层---");
+        //选项卡
+        if (TABS.equals(type)) {
+            JSONArray tabs = (JSONArray) formTable.get(TABS);
+            if (CollectionUtils.isNotEmpty(tabs)) {
+                //选项卡是多个的情况
+                for (Object tab : tabs) {
+                    JSONObject jsonTab = (JSONObject) tab;
+                    //每个分栏下是body
+                    if (!(jsonTab.get(BODY) instanceof JSONArray)) {
+                        continue;
+                    }
+                    JSONArray body = (JSONArray) jsonTab.get(BODY);
+                    parseBody(formFields, body, count);
+                }
+            }
+        }
+
+        //分栏
+        if (GRID.equals(type)) {
+            JSONArray columns = (JSONArray) formTable.get(COLUMNS);
+            if (CollectionUtils.isNotEmpty(columns)) {
+                //分栏是多个
+                for (Object column : columns) {
+                    JSONObject jsonColumn = (JSONObject) column;
+                    //每个分栏下是Body
+                    JSONArray body = (JSONArray) jsonColumn.get(BODY);
+                    parseBody(formFields, body, count);
+                }
+            }
+        }
+    }
+
+    /**
+     * 解析body
+     *
+     * @param formFields
+     * @param body
+     * @param count
+     */
+    private static void parseBody(List<JSONObject> formFields, JSONArray body, int count) {
+        for (Object object : body) {
+            if (!(object instanceof JSONObject)) {
+                continue;
+            }
+            log.info("--解析容器类型组件body--");
+            JSONObject jsonObject = (JSONObject) object;
+            String type = jsonObject.getString(TYPE);
+            //表单项组件
+            if (FORM_TYPE.contains(type)) {
+                formFields.add(jsonObject);
+            } else if (CONTAINER_TYPE.contains(type)) {
+                //三栏、两栏、选项卡
+                count++;
+                if (count > 2) {
+                    //嵌套大于两层不处理
+                    continue;
+                }
+                if (TABS.equals(type)) {
+                    parseTabs(formFields, jsonObject, count);
+                }
+                if (GRID.equals(type)) {
+                    parseGrid(formFields, jsonObject, count);
+                }
+            }
+        }
+    }
+
+    /**
+     * 解析选项卡
+     *
+     * @param formFields
+     * @param jsonObject
+     * @param count
+     */
+    private static void parseTabs(List<JSONObject> formFields, JSONObject jsonObject, int count) {
+        JSONArray tabs = (JSONArray) jsonObject.get(TABS);
+        if (CollectionUtils.isNotEmpty(tabs)) {
+            log.info("--解析选项卡--");
+            //多个选项卡的情况
+            for (Object tab : tabs) {
+                JSONObject jsonTab = (JSONObject) tab;
+                // 每个分栏下是body
+                if (!(jsonTab.get(BODY) instanceof JSONArray)) {
+                    continue;
+                }
+
+                JSONArray body = (JSONArray) jsonTab.get(BODY);
+                parseBody(formFields, body, count);
+            }
+        }
+    }
+
+    /**
+     * 解析分栏
+     *
+     * @param formFields
+     * @param jsonObject
+     * @param count
+     */
+    private static void parseGrid(List<JSONObject> formFields, JSONObject jsonObject, int count) {
+        JSONArray columns = (JSONArray) jsonObject.get(COLUMNS);
+        if (CollectionUtils.isNotEmpty(columns)) {
+            log.info("--解析分栏--");
+            //分栏是多个
+            for (Object column : columns) {
+                JSONObject jsonColumn = (JSONObject) column;
+
+                //每个分栏下是body
+                JSONArray body = (JSONArray) jsonColumn.get(BODY);
+                parseBody(formFields, body, count);
+            }
+        }
     }
 }

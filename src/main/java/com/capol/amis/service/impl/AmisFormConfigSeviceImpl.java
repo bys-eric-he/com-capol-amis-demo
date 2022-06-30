@@ -2,11 +2,13 @@ package com.capol.amis.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.capol.amis.entity.BusinessSubjectDO;
+import com.capol.amis.entity.TemplateFormConfDO;
 import com.capol.amis.enums.ComponentFieldEnum;
 import com.capol.amis.enums.SystemFieldEnum;
 import com.capol.amis.model.BusinessSubjectFormModel;
 import com.capol.amis.model.FormFieldConfigModel;
 import com.capol.amis.service.*;
+import com.capol.amis.service.transaction.ServiceTransactionDefinition;
 import com.capol.amis.utils.AmisUtil;
 import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.SnowflakeUtil;
@@ -22,8 +24,7 @@ import java.util.Map;
 
 @Slf4j
 @Service
-public class AmisFormConfigSeviceImpl implements IAmisFormConfigSevice {
-
+public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition implements IAmisFormConfigSevice {
     /**
      * 雪花算法工具类
      */
@@ -77,18 +78,23 @@ public class AmisFormConfigSeviceImpl implements IAmisFormConfigSevice {
         } else {
             businessSubjectDO.setSubjectName("AMIS-DEMO-业务主题");
         }
-        businessSubjectDO.setConfigJson(subjectFormModel.getConfigJson());
-        businessSubjectDO.setEnterpriseId(snowflakeUtil.nextId());
-        businessSubjectDO.setProjectId(snowflakeUtil.nextId());
-        businessSubjectDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
-        businessSubjectDO.setStatus(1);
+        Long enterpriseId = snowflakeUtil.nextId();
+        Long projectId = snowflakeUtil.nextId();
 
+        businessSubjectDO.setConfigJson(subjectFormModel.getConfigJson());
+        businessSubjectDO.setEnterpriseId(enterpriseId);
+        businessSubjectDO.setProjectId(projectId);
+        businessSubjectDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
         try {
+            super.start();
             // 保存业务主题基本信息
             iBusinessSubjectService.save(businessSubjectDO);
-            saveHandle(subjectFormModel);
+            log.info("保存业务主题基本信息完成!");
+            saveHandle(enterpriseId, projectId, subjectFormModel);
+            super.commit();
         } catch (Exception exception) {
             log.error("保存表单字段配置信息异常, 异常原因：" + exception.getMessage());
+            super.rollback();
         }
 
         return "保存表单字段配置信息成功！";
@@ -97,52 +103,64 @@ public class AmisFormConfigSeviceImpl implements IAmisFormConfigSevice {
     /**
      * 处理表单配置信息
      *
+     * @param enterpriseId
+     * @param projectId
      * @param subjectFormModel
      * @return
      */
-    private String saveHandle(BusinessSubjectFormModel subjectFormModel) throws Exception {
+    private void saveHandle(Long enterpriseId, Long projectId, BusinessSubjectFormModel subjectFormModel) throws Exception {
 
         String configJson = subjectFormModel.getConfigJson();
         // 主表(表单)字段
         List<JSONObject> formFields = new ArrayList<>();
-        // 从表(列表)字段
-        Map<String, List<JSONObject>> gridFields = new HashMap<>();
-
-        // 从表映射Map, key是表名标识, value是从表字段对象
-        Map<String, JSONObject> gridTableMap = new HashMap<>();
 
         // 主表映射Map
         JSONObject formTable = AmisUtil.getFormObject(configJson);
 
         // 解析表单JSON
-        parseFormBody(formFields, gridFields, gridTableMap, formTable);
+        parseFormBody(formFields, formTable);
 
         // 处理主表数据
         List<FormFieldConfigModel> formFieldConfigModels = formTableHandle(subjectFormModel, formFields);
         log.info("-->主表字段信息：" + JSONObject.toJSONString(formFieldConfigModels));
 
-        // 处理从表数据
+        List<TemplateFormConfDO> templateFormConfDOS = new ArrayList<>();
+        int orderNo = 1;
+        for (FormFieldConfigModel model : formFieldConfigModels) {
+            TemplateFormConfDO templateFormConfDO = new TemplateFormConfDO();
+            templateFormConfDO.setEnterpriseId(enterpriseId);
+            templateFormConfDO.setProjectId(projectId);
+            templateFormConfDO.setSubjectId(model.getSubjectId());
+            templateFormConfDO.setFieldAlias(model.getFieldAlias());
+            templateFormConfDO.setFieldKey(model.getFieldKey());
+            templateFormConfDO.setFieldName(model.getFieldName());
+            templateFormConfDO.setFieldOrder(orderNo);
+            templateFormConfDO.setFieldType(model.getFieldType());
+            templateFormConfDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
 
+            templateFormConfDOS.add(templateFormConfDO);
+            orderNo++;
+        }
 
-        return null;
+        iTemplateFormConfService.saveBatch(templateFormConfDOS);
+
+        log.info("保存表单配置信息完成!");
     }
 
     /**
      * 解析表单JSON和校验
      *
      * @param formFields
-     * @param gridFields
-     * @param gridTableMap
      * @param formTable
      */
-    private void parseFormBody(List<JSONObject> formFields, Map<String, List<JSONObject>> gridFields, Map<String, JSONObject> gridTableMap, JSONObject formTable) throws Exception {
+    private void parseFormBody(List<JSONObject> formFields, JSONObject formTable) throws Exception {
         if (formTable == null) {
             throw new Exception("表单组件不能为空，请重新检查再提交!");
         }
 
         //开始解析表单JSON
         try {
-            AmisUtil.parseFormBody(formFields, gridFields, gridTableMap, formTable);
+            AmisUtil.parseFormBody(formFields, formTable);
         } catch (Exception exception) {
             throw new Exception("解析表单异常，请重新检查再提交, 异常原因：" + exception.getMessage());
         }

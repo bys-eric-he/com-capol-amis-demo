@@ -18,6 +18,10 @@ import lombok.EqualsAndHashCode;
 @TableName("t_template_form_data")
 public class TemplateFormDataDO extends BaseInfo {
     /**
+     * 数据行ID
+     */
+    private Long rowId;
+    /**
      * 表单配置ID
      */
     private Long templateId;
@@ -77,8 +81,4 @@ public class TemplateFormDataDO extends BaseInfo {
      */
     private Long fieldHashValue;
 
-    /**
-     * 1：正常，0：已删除
-     */
-    private Integer status;
 }
