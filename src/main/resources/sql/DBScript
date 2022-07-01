@@ -4,8 +4,9 @@
  */
 CREATE DATABASE IF NOT EXISTS `db_amis_demo` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 
+
 /*
- * 业务主题基本信息 
+ * 业务主题基本信息
  * */
 DROP TABLE IF EXISTS `cfg_business_subject`;
 
@@ -95,6 +96,7 @@ DROP TABLE IF EXISTS `t_template_form_data`;
 CREATE TABLE `t_template_form_data` (
 	`id` bigint(20) NOT NULL COMMENT '主键ID',
 	`template_id` bigint(20) NOT NULL COMMENT '表单配置ID',
+	`row_id` bigint(20) NOT NULL COMMENT '数据批次ID',
 	`enterprise_id` bigint(20) NOT NULL COMMENT '企业ID',
 	`project_id` bigint(20) NOT NULL COMMENT '项目ID',
 	`subject_id` bigint(20) DEFAULT NULL COMMENT '业务主题ID',
@@ -128,6 +130,8 @@ DROP TABLE IF EXISTS `t_template_grid_data`;
 CREATE TABLE `t_template_grid_data` (
 	`id` bigint(20) NOT NULL COMMENT '主键ID',
 	`template_id` bigint(20) NOT NULL COMMENT '表单配置ID',
+	`form_row_id` bigint(20) NOT NULL COMMENT '表单数据行ID',
+	`row_id` bigint(20) NOT NULL COMMENT '数据批次ID',
 	`enterprise_id` bigint(20) NOT NULL COMMENT '企业ID',
 	`project_id` bigint(20) NOT NULL COMMENT '项目ID',
 	`subject_id` bigint(20) DEFAULT NULL COMMENT '业务主题ID',

@@ -91,14 +91,14 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
 
             List<TemplateGridDataDO> templateGridDataDOS = new ArrayList<>();
 
-            //数据行ID
+            //主表数据行ID
             Long rowId = snowflakeUtil.nextId();
             //遍历传入的JSON数据
             for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
                 String fieldKey = entry.getKey();
                 Object dataValue = entry.getValue();
                 if (!(dataValue instanceof JSONArray)) {
-                    //遍历业务主题表单字段
+                    //遍历主表业务主题字段
                     for (TemplateFormConfDO confDO : templateFormConfDOS) {
                         if (confDO.getFieldKey().equals(fieldKey)) {
                             TemplateFormDataDO dataDO = new TemplateFormDataDO();
@@ -121,12 +121,12 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                     }
                 } else if (dataValue instanceof JSONArray) {
                     JSONArray gridValues = (JSONArray) dataValue;
-                    //遍历业务主题列表字段
+                    //遍历从表业务主题字段
                     for (Object obj : gridValues) {
                         log.info("列表数据： {}", JSONObject.toJSONString(obj));
                         JSONObject gridObject = (JSONObject) obj;
-                        //数据行ID
-                        Long rowNumber = snowflakeUtil.nextId();
+                        //从表数据行ID
+                        Long subRowId = snowflakeUtil.nextId();
                         //遍历传入的JSON数据
                         for (Map.Entry<String, Object> grid : gridObject.entrySet()) {
                             String gridKey = grid.getKey();
@@ -137,7 +137,8 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                                     TemplateGridDataDO dataDO = new TemplateGridDataDO();
                                     String column = confDO.getFieldName();
                                     String value = gridValue.toString();
-                                    dataDO.setRowId(rowNumber);
+                                    dataDO.setRowId(subRowId);
+                                    dataDO.setFormRowId(rowId);
                                     dataDO.setProjectId(confDO.getProjectId());
                                     dataDO.setTemplateId(confDO.getId());
                                     dataDO.setSubjectId(confDO.getSubjectId());

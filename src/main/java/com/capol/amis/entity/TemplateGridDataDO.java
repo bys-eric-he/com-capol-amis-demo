@@ -21,6 +21,12 @@ public class TemplateGridDataDO extends BaseInfo {
      * 数据行ID
      */
     private Long rowId;
+
+    /**
+     * 主表数据行ID
+     */
+    private Long formRowId;
+
     /**
      * 表单配置ID
      */

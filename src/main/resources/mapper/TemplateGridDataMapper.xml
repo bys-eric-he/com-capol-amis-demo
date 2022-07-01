@@ -6,6 +6,7 @@
     <resultMap id="BaseResultMap" type="com.capol.amis.entity.TemplateGridDataDO">
         <id column="id" property="id" />
         <result column="row_id" property="rowId" />
+        <result column="form_row_id" property="formRowId" />
         <result column="template_id" property="templateId" />
         <result column="enterprise_id" property="enterpriseId" />
         <result column="project_id" property="projectId" />
@@ -33,6 +34,7 @@
     <sql id="Base_Column_List">
         id,
         row_id,
+        form_row_id,
         template_id,
         enterprise_id,
         project_id,
