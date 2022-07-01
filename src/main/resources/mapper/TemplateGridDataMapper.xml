@@ -5,6 +5,7 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.capol.amis.entity.TemplateGridDataDO">
         <id column="id" property="id" />
+        <result column="row_id" property="rowId" />
         <result column="template_id" property="templateId" />
         <result column="enterprise_id" property="enterpriseId" />
         <result column="project_id" property="projectId" />
@@ -31,6 +32,7 @@
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         id,
+        row_id,
         template_id,
         enterprise_id,
         project_id,

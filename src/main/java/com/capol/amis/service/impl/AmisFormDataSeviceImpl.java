@@ -2,13 +2,14 @@ package com.capol.amis.service.impl;
 
 import cn.hutool.core.util.HashUtil;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.capol.amis.entity.TemplateFormConfDO;
 import com.capol.amis.entity.TemplateFormDataDO;
+import com.capol.amis.entity.TemplateGridConfDO;
+import com.capol.amis.entity.TemplateGridDataDO;
 import com.capol.amis.model.BusinessSubjectDataModel;
-import com.capol.amis.service.IAmisFormDataSevice;
-import com.capol.amis.service.ITemplateFormConfService;
-import com.capol.amis.service.ITemplateFormDataService;
+import com.capol.amis.service.*;
 import com.capol.amis.service.transaction.ServiceTransactionDefinition;
 import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.SnowflakeUtil;
@@ -41,10 +42,22 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
     private ITemplateFormConfService iTemplateFormConfService;
 
     /**
+     * 列表配置信息
+     */
+    @Autowired
+    private ITemplateGridConfService iTemplateGridConfService;
+
+    /**
      * 表单数据信息
      */
     @Autowired
     private ITemplateFormDataService iTemplateFormDataService;
+
+    /**
+     * 列表数据信息
+     */
+    @Autowired
+    private ITemplateGridDataService iTemplateGridDataService;
 
     /**
      * 插入表单数据
@@ -62,14 +75,21 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                 throw new Exception("表单字段配置表中暂无该业务主题的相关配置！");
             }
 
+            List<TemplateGridConfDO> templateGridConfDOS = iTemplateGridConfService.getFieldsBySubjectId(businessSubjectDataModel.getSubjectId());
+            if (CollectionUtils.isEmpty(templateGridConfDOS)) {
+                log.warn("------业务主题：{} 从表没有配置信息!", businessSubjectDataModel.getSubjectId());
+            }
+
             JSONObject jsonObject = JSON.parseObject(businessSubjectDataModel.getDataJson());
 
             if (null == jsonObject) {
                 throw new Exception("JSON解析失败！");
             }
 
-            //数据集
+            //主表数据集
             List<TemplateFormDataDO> templateFormDataDOS = new ArrayList<>();
+
+            List<TemplateGridDataDO> templateGridDataDOS = new ArrayList<>();
 
             //数据行ID
             Long rowId = snowflakeUtil.nextId();
@@ -77,34 +97,79 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
             for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
                 String fieldKey = entry.getKey();
                 Object dataValue = entry.getValue();
-                //遍历业务主题表字段
-                for (TemplateFormConfDO confDO : templateFormConfDOS) {
-                    if (confDO.getFieldKey().equals(fieldKey)) {
-                        TemplateFormDataDO dataDO = new TemplateFormDataDO();
-                        String column = confDO.getFieldName();
-                        String value = dataValue.toString();
-                        dataDO.setRowId(rowId);
-                        dataDO.setProjectId(confDO.getProjectId());
-                        dataDO.setSubjectId(confDO.getSubjectId());
-                        dataDO.setTemplateId(confDO.getId());
-                        dataDO.setFieldAlias(confDO.getFieldAlias());
-                        dataDO.setFieldKey(confDO.getFieldKey());
-                        dataDO.setEnterpriseId(confDO.getEnterpriseId());
-                        dataDO.setFieldName(column);
-                        dataDO.setFieldType(confDO.getFieldType());
-                        dataDO.setFieldTextValue(value);
-                        dataDO.setFieldHashValue(HashUtil.mixHash(value));
-                        dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
-                        templateFormDataDOS.add(dataDO);
+                if (!(dataValue instanceof JSONArray)) {
+                    //遍历业务主题表单字段
+                    for (TemplateFormConfDO confDO : templateFormConfDOS) {
+                        if (confDO.getFieldKey().equals(fieldKey)) {
+                            TemplateFormDataDO dataDO = new TemplateFormDataDO();
+                            String column = confDO.getFieldName();
+                            String value = dataValue.toString();
+                            dataDO.setRowId(rowId);
+                            dataDO.setProjectId(confDO.getProjectId());
+                            dataDO.setSubjectId(confDO.getSubjectId());
+                            dataDO.setTemplateId(confDO.getId());
+                            dataDO.setFieldAlias(confDO.getFieldAlias());
+                            dataDO.setFieldKey(confDO.getFieldKey());
+                            dataDO.setEnterpriseId(confDO.getEnterpriseId());
+                            dataDO.setFieldName(column);
+                            dataDO.setFieldType(confDO.getFieldType());
+                            dataDO.setFieldTextValue(value);
+                            dataDO.setFieldHashValue(HashUtil.mixHash(value));
+                            dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+                            templateFormDataDOS.add(dataDO);
+                        }
+                    }
+                } else if (dataValue instanceof JSONArray) {
+                    JSONArray gridValues = (JSONArray) dataValue;
+                    //遍历业务主题列表字段
+                    for (Object obj : gridValues) {
+                        log.info("列表数据： {}", JSONObject.toJSONString(obj));
+                        JSONObject gridObject = (JSONObject) obj;
+                        //数据行ID
+                        Long rowNumber = snowflakeUtil.nextId();
+                        //遍历传入的JSON数据
+                        for (Map.Entry<String, Object> grid : gridObject.entrySet()) {
+                            String gridKey = grid.getKey();
+                            Object gridValue = grid.getValue();
+                            //遍历业务主题列表字段
+                            for (TemplateGridConfDO confDO : templateGridConfDOS) {
+                                if (confDO.getFieldKey().equals(gridKey)) {
+                                    TemplateGridDataDO dataDO = new TemplateGridDataDO();
+                                    String column = confDO.getFieldName();
+                                    String value = gridValue.toString();
+                                    dataDO.setRowId(rowNumber);
+                                    dataDO.setProjectId(confDO.getProjectId());
+                                    dataDO.setTemplateId(confDO.getId());
+                                    dataDO.setSubjectId(confDO.getSubjectId());
+                                    dataDO.setFieldAlias(confDO.getFieldAlias());
+                                    dataDO.setFieldKey(confDO.getFieldKey());
+                                    dataDO.setEnterpriseId(confDO.getEnterpriseId());
+                                    dataDO.setFieldName(column);
+                                    dataDO.setFieldType(confDO.getFieldType());
+                                    dataDO.setFieldTextValue(value);
+                                    dataDO.setFieldHashValue(HashUtil.mixHash(value));
+                                    dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+                                    templateGridDataDOS.add(dataDO);
+                                }
+                            }
+                        }
                     }
                 }
             }
 
+            super.start();
             if (templateFormDataDOS.size() > 0) {
                 iTemplateFormDataService.saveBatch(templateFormDataDOS);
                 log.info("保存业务主题表单数据完成!!!");
             }
+
+            if (templateGridDataDOS.size() > 0) {
+                iTemplateGridDataService.saveBatch(templateGridDataDOS);
+                log.info("保存业务主题列表数据完成!!!");
+            }
+            super.commit();
         } catch (Exception exception) {
+            super.rollback();
             log.error("保存业务主题表单数据异常! 异常原因:" + exception.getMessage());
         }
         return "保存业务主题表单数据完成!!";

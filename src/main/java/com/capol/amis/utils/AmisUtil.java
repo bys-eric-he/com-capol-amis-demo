@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.capol.amis.enums.ComponentTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ public class AmisUtil {
     public static final String GRID = "grid";
 
     public static final String COLUMNS = "columns";
+    public static final String NAME = "name";
 
     public static final String PICKER = "picker";
     public static final String TREE_SELECT = "tree-select";
@@ -84,10 +86,10 @@ public class AmisUtil {
      * 解析表单
      *
      * @param formFields
+     * @param gridFields
      * @param formTable
      */
-    public static void parseFormBody(List<JSONObject> formFields, JSONObject formTable) {
-
+    public static void parseFormBody(List<JSONObject> formFields, List<JSONObject> gridFields, JSONObject formTable) {
         JSONArray formBody = null;
         if (formTable != null) {
             formBody = (JSONArray) formTable.get(BODY);
@@ -108,6 +110,7 @@ public class AmisUtil {
                 formFields.add(jsonObject);
             } else if (ComponentTypeEnum.INPUT_TABLE.getValue().equals(type)) {
                 //表格编辑框
+                parseInputTable(gridFields, jsonObject);
             } else if (CONTAINER_TYPE.contains(type)) {
                 //嵌套容器：三栏、两栏、选项卡
                 parseContainer(formFields, jsonObject, type);
@@ -147,6 +150,29 @@ public class AmisUtil {
             return (Integer) validations.get(MAXLENGTH);
         }
         return null;
+    }
+
+    /**
+     * 解析表格编辑框组件
+     *
+     * @param gridFields
+     * @param gridTable
+     */
+    private static void parseInputTable(List<JSONObject> gridFields, JSONObject gridTable) {
+        JSONArray cloumns = (JSONArray) gridTable.get(COLUMNS);
+        //遍历表格中的字段，目前只支持text类型
+        for (Object cloumn : cloumns) {
+            JSONObject jsonObject = (JSONObject) cloumn;
+            String type = jsonObject.getString(TYPE);
+            String columnName = jsonObject.getString(NAME);
+            if (StringUtils.isBlank(columnName)) {
+                log.error("解析表格编辑框组件错误, 表格成生的自动标识不能为空!");
+                return;
+            }
+            if (FORM_TYPE.contains(type)) {
+                gridFields.add(jsonObject);
+            }
+        }
     }
 
     /**

@@ -18,6 +18,10 @@ import lombok.EqualsAndHashCode;
 @TableName("t_template_grid_data")
 public class TemplateGridDataDO extends BaseInfo {
     /**
+     * 数据行ID
+     */
+    private Long rowId;
+    /**
      * 表单配置ID
      */
     private Long templateId;
