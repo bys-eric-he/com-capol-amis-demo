@@ -2,6 +2,7 @@ package com.capol.amis.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.capol.amis.entity.TemplateGridConfDO;
+import org.springframework.stereotype.Repository;
 
 /**
  * <p>
@@ -11,6 +12,7 @@ import com.capol.amis.entity.TemplateGridConfDO;
  * @author He.Yong
  * @since 2022-06-28
  */
+@Repository
 public interface TemplateGridConfMapper extends BaseMapper<TemplateGridConfDO> {
 
 }

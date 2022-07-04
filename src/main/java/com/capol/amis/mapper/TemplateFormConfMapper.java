@@ -2,6 +2,7 @@ package com.capol.amis.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.capol.amis.entity.TemplateFormConfDO;
+import org.springframework.stereotype.Repository;
 
 /**
  * <p>
@@ -11,5 +12,6 @@ import com.capol.amis.entity.TemplateFormConfDO;
  * @author He.Yong
  * @since 2022-06-28
  */
+@Repository
 public interface TemplateFormConfMapper extends BaseMapper<TemplateFormConfDO> {
 }

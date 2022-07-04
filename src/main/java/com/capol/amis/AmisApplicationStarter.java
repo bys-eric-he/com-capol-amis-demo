@@ -1,14 +1,18 @@
 package com.capol.amis;
 
+import com.alibaba.druid.spring.boot.autoconfigure.DruidDataSourceAutoConfigure;
 import com.capol.amis.config.ServerConfig;
 import com.capol.amis.utils.SpringContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @Slf4j
-@SpringBootApplication
+// 排除Druid相关依赖, 防止出现Failed to determine a suitable driver class错误
+@SpringBootApplication(exclude = DruidDataSourceAutoConfigure.class)
+@EnableDiscoveryClient
 @MapperScan("com.capol.amis.mapper")
 public class AmisApplicationStarter {
     public static void main(String[] args) {
