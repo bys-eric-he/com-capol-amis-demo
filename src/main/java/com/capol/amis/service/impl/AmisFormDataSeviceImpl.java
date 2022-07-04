@@ -67,6 +67,7 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
      */
     @Override
     public String insertData(BusinessSubjectDataModel businessSubjectDataModel) {
+        super.start();
         try {
             checkValidate(businessSubjectDataModel);
             // 根据业务主题ID获取表单配置信息
@@ -106,12 +107,12 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                             String column = confDO.getFieldName();
                             String value = dataValue.toString();
                             dataDO.setRowId(rowId);
+                            dataDO.setEnterpriseId(confDO.getEnterpriseId());
                             dataDO.setProjectId(confDO.getProjectId());
                             dataDO.setSubjectId(confDO.getSubjectId());
                             dataDO.setTemplateId(confDO.getId());
                             dataDO.setFieldAlias(confDO.getFieldAlias());
                             dataDO.setFieldKey(confDO.getFieldKey());
-                            dataDO.setEnterpriseId(confDO.getEnterpriseId());
                             dataDO.setFieldName(column);
                             dataDO.setFieldType(confDO.getFieldType());
                             dataDO.setFieldTextValue(value);
@@ -142,12 +143,13 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                                     String value = gridValue.toString();
                                     dataDO.setRowId(subRowId);
                                     dataDO.setFormRowId(rowId);
+                                    dataDO.setEnterpriseId(confDO.getEnterpriseId());
                                     dataDO.setProjectId(confDO.getProjectId());
-                                    dataDO.setTemplateId(confDO.getId());
                                     dataDO.setSubjectId(confDO.getSubjectId());
+                                    dataDO.setTemplateId(confDO.getId());
                                     dataDO.setFieldAlias(confDO.getFieldAlias());
                                     dataDO.setFieldKey(confDO.getFieldKey());
-                                    dataDO.setEnterpriseId(confDO.getEnterpriseId());
+
                                     dataDO.setFieldName(column);
                                     dataDO.setFieldType(confDO.getFieldType());
                                     dataDO.setFieldTextValue(value);
@@ -161,7 +163,6 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                 }
             }
 
-            super.start();
             if (templateFormDataDOS.size() > 0) {
                 iTemplateFormDataService.saveBatch(templateFormDataDOS);
                 log.info("保存业务主题表单数据完成!!!");
@@ -175,8 +176,10 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
         } catch (Exception exception) {
             super.rollback();
             log.error("保存业务主题表单数据异常! 异常原因:" + exception.getMessage());
+            log.error("异常详细信息：" + exception);
+            return "****保存业务主题表单数据失败!!****";
         }
-        return "保存业务主题表单数据完成!!";
+        return "保存业务主题表单数据成功!!";
     }
 
     /**

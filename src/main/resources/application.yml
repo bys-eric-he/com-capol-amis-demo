@@ -4,3 +4,6 @@ server:
 spring:
   profiles:
     active: remote
+
+enterprise:
+  id: 324225698253233659

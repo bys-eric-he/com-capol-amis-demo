@@ -3,6 +3,7 @@ package com.capol.amis.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.capol.amis.entity.TemplateFormConfDO;
 import io.lettuce.core.dynamic.annotation.Param;
+import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
  * @author He.Yong
  * @since 2022-06-28
  */
-@Repository
+@Mapper
 public interface TemplateFormConfMapper extends BaseMapper<TemplateFormConfDO> {
 
     /**

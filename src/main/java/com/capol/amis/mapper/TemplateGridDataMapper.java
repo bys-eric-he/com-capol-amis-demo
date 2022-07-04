@@ -2,6 +2,7 @@ package com.capol.amis.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.capol.amis.entity.TemplateGridDataDO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * <p>
@@ -11,6 +12,7 @@ import com.capol.amis.entity.TemplateGridDataDO;
  * @author He.Yong
  * @since 2022-06-28
  */
+@Mapper
 public interface TemplateGridDataMapper extends BaseMapper<TemplateGridDataDO> {
 
 }

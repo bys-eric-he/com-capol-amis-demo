@@ -1,6 +1,7 @@
 package com.capol.amis.utils;
 
 import com.capol.amis.entity.base.BaseInfo;
+import com.capol.amis.entity.base.EnterpriseProjectInfo;
 import com.capol.amis.entity.base.SystemInfo;
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,6 +14,19 @@ public class BaseInfoContextHolder {
     private static SnowflakeUtil snowflakeUtil = SpringContextHolder.getBean("SnowflakeUtil");
 
     /**
+     * 企业项目信息
+     *
+     * @return
+     */
+    public static EnterpriseProjectInfo getEnterpriseAndProjectInfo() {
+        EnterpriseProjectInfo enterpriseProjectInfo = new EnterpriseProjectInfo();
+        enterpriseProjectInfo.setEnterpriseId(324225698253233659L);
+        enterpriseProjectInfo.setProjectId(snowflakeUtil.nextId());
+
+        return enterpriseProjectInfo;
+    }
+
+    /**
      * 基本信息
      *
      * @return
@@ -20,7 +34,6 @@ public class BaseInfoContextHolder {
     public static BaseInfo getBaseInfo() {
         BaseInfo baseInfo = new BaseInfo();
         SystemInfo systemInfo = new SystemInfo();
-
 
         try {
             String ip = InetAddress.getLocalHost().getHostAddress();

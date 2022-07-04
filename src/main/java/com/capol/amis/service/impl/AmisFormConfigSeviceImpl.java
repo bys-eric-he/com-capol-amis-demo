@@ -70,8 +70,9 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
         } else {
             businessSubjectDO.setSubjectName("AMIS-DEMO-业务主题");
         }
-        Long enterpriseId = snowflakeUtil.nextId();
-        Long projectId = snowflakeUtil.nextId();
+
+        Long enterpriseId = BaseInfoContextHolder.getEnterpriseAndProjectInfo().getEnterpriseId();
+        Long projectId = BaseInfoContextHolder.getEnterpriseAndProjectInfo().getProjectId();
 
         businessSubjectDO.setConfigJson(subjectFormModel.getConfigJson());
         businessSubjectDO.setEnterpriseId(enterpriseId);
@@ -87,6 +88,7 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
         } catch (Exception exception) {
             log.error("保存表单字段配置信息异常, 异常原因：" + exception.getMessage());
             super.rollback();
+            return "****保存表单字段配置信息失败！****";
         }
 
         return "保存表单字段配置信息成功！";

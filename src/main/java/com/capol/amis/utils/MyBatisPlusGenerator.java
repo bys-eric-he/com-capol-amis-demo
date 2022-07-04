@@ -26,7 +26,6 @@ public class MyBatisPlusGenerator {
                 // 作者
                 .setAuthor("He.Yong")
                 // 生成路径，最好使用绝对路径
-                //TODO  TODO  TODO  TODO
                 .setOutputDir("D:\\files")
                 // 文件覆盖
                 .setFileOverride(true)
