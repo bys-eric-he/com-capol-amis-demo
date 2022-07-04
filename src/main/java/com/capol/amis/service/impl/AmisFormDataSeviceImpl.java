@@ -86,9 +86,10 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                 throw new Exception("JSON解析失败！");
             }
 
-            //主表数据集
+            //主表数据
             List<TemplateFormDataDO> templateFormDataDOS = new ArrayList<>();
 
+            //从表数据
             List<TemplateGridDataDO> templateGridDataDOS = new ArrayList<>();
 
             //主表数据行ID
@@ -119,7 +120,9 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                             templateFormDataDOS.add(dataDO);
                         }
                     }
-                } else if (dataValue instanceof JSONArray) {
+                } else if (fieldKey.startsWith("table_") && dataValue instanceof JSONArray) {
+                    log.info("解析列表(table)数据.....");
+                    //如果是表格则将值转换成数组
                     JSONArray gridValues = (JSONArray) dataValue;
                     //遍历从表业务主题字段
                     for (Object obj : gridValues) {
