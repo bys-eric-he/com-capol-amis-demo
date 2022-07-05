@@ -7,9 +7,13 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @Slf4j
-@SpringBootApplication
+// 排除Druid相关依赖, 防止出现Failed to determine a suitable driver class错误
+@SpringBootApplication(exclude = DruidDataSourceAutoConfigure.class)
+@EnableDiscoveryClient
+@MapperScan("com.capol.amis.mapper")
 @MapperScan(basePackages = {"com.capol.amis.mapper"})
 @ServletComponentScan(basePackages = {"com.capol.amis.filter"})
 public class AmisApplicationStarter {

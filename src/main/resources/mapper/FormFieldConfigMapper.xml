@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.capol.amis.mapper.FormFieldConfigMapper">
+
+    <resultMap id="BaseResultMap" type="com.capol.amis.entity.FormFieldConfigDO">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="subjectId" column="subject_id" jdbcType="BIGINT"/>
+            <result property="tableAlias" column="table_alias" jdbcType="VARCHAR"/>
+            <result property="tableName" column="table_name" jdbcType="VARCHAR"/>
+            <result property="tableKey" column="table_key" jdbcType="VARCHAR"/>
+            <result property="fieldAlias" column="field_alias" jdbcType="VARCHAR"/>
+            <result property="fieldName" column="field_name" jdbcType="VARCHAR"/>
+            <result property="fieldKey" column="field_key" jdbcType="VARCHAR"/>
+            <result property="fieldLength" column="field_length" jdbcType="SMALLINT"/>
+            <result property="fieldType" column="field_type" jdbcType="VARCHAR"/>
+            <result property="componentType" column="component_type" jdbcType="VARCHAR"/>
+            <result property="fieldDataType" column="field_data_type" jdbcType="TINYINT"/>
+            <result property="fieldShowType" column="field_show_type" jdbcType="TINYINT"/>
+            <result property="fieldSourceType" column="field_source_type" jdbcType="TINYINT"/>
+            <result property="tableRelationType" column="table_relation_type" jdbcType="TINYINT"/>
+            <result property="orderNo" column="order_no" jdbcType="BIGINT"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="creator" column="creator" jdbcType="VARCHAR"/>
+            <result property="createdHostIp" column="created_host_ip" jdbcType="VARCHAR"/>
+            <result property="creatorId" column="creator_id" jdbcType="BIGINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="lastOperator" column="last_operator" jdbcType="VARCHAR"/>
+            <result property="updateHostIp" column="update_host_ip" jdbcType="VARCHAR"/>
+            <result property="lastOperatorId" column="last_operator_id" jdbcType="BIGINT"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,subject_id,table_alias,
+        table_name,table_key,field_alias,
+        field_name,field_key,field_length,
+        field_type,component_type,field_data_type,
+        field_show_type,field_source_type,table_relation_type,
+        order_no,status,creator,
+        created_host_ip,creator_id,create_time,
+        last_operator,update_host_ip,last_operator_id,
+        update_time
+    </sql>
+</mapper>

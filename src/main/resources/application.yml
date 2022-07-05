@@ -1,9 +1,112 @@
 server:
   port: 8809
 
+# mybatis-plus相关配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  global-config:
+    db-config:
+      id-type: auto
+      field-strategy: NOT_EMPTY
+      db-type: MYSQL
+  configuration:
+    map-underscore-to-camel-case: true
+    call-setters-on-nulls: true
+    auto-mapping-behavior: full
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+repeatSubmit:
+  intervalTime: 15
+token:
+  header: REPEAT-SUBMIT-HEADER
+
 spring:
   profiles:
     active: remote
 
 enterprise:
   id: 324225698253233659
+  #定义数据源
+  datasource:
+    dynamic:
+      # 设置默认的数据源或者数据源组,默认值即为master
+      primary: master
+      # 严格匹配数据源,默认false.
+      # true未匹配到指定数据源时抛异常, false使用默认数据源
+      strict: false
+      datasource:
+        master:
+          url: jdbc:mysql://localhost:3306/db_amis_demo?useUnicode=true&characterEncoding=UTF8&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          username: root
+          password: root
+        qa_biz:
+          url: jdbc:mysql://localhost:3306/db_amis_demo?useUnicode=true&characterEncoding=UTF8&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          username: root
+          password: root
+        # eric_bak:
+        #   url: jdbc:mysql://localhost:3306/db_amis_demo?useUnicode=true&characterEncoding=UTF8&allowMultiQueries=true&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+        #   driver-class-name: com.mysql.cj.jdbc.Driver
+        #   username: root
+        #   password: root
+      type: com.alibaba.druid.pool.DruidDataSource
+      # 关闭连接池参数用于测试
+      druid:
+        # 初始连接数
+        initialSize: 5
+        # 最小连接池数量
+        minIdle: 5
+        # 最大连接池数量
+        maxActive: 20
+        # 配置获取连接等待超时的时间，单位毫秒
+        maxWait: 30000
+        #sql  查询超时
+        queryTimeout: 1200
+        #执行一个事务的超时时间(秒)
+        transactionQueryTimeout: 1200
+        #SQL 查询验证超时时间（秒），小于或等于 0 的数值表示禁用
+        validationQueryTimeout: 20
+        #设置是否保持连接活动心跳检测
+        keepAlive: true
+        # 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+        timeBetweenEvictionRunsMillis: 10000
+        # 配置一个连接在池中最小生存的时间，单位是毫秒
+        minEvictableIdleTimeMillis: 300000
+        # 配置一个连接在池中最大生存的时间，单位是毫秒
+        maxEvictableIdleTimeMillis: 600000
+        #标记是否删除泄露的连接，如果连接超出removeAbandonedTimeout的限制，且该属性设置为 true，则连接被认为是被泄露并且可以被删除
+        removeAbandoned: true
+        # 泄露的连接可以被删除的超时时间（秒），该值应设置为应用程序查询可能执行的最长时间
+        removeAbandonedTimeout: 1200
+        # 配置检测连接是否有效执行SQL,Oracle需要打开注释
+        # validationQuery: SELECT 1 FROM DUAL
+        testWhileIdle: true
+        testOnBorrow: false
+        testOnReturn: false
+        stat-view-servlet:
+          enabled: true
+          url-pattern: /druid/*
+          #login-username: admin
+          #login-password: admin
+        filter:
+          stat:
+            log-slow-sql: true
+            slow-sql-millis: 1000
+            merge-sql: false
+          wall:
+            config:
+              multi-statement-allow: true
+  redis:
+    timeout: 50000
+    database: 0
+    password: redispwd
+    jedis:
+      pool:
+        max-active: 1024
+        max-wait: 20000
+        max-idle: 200
+        min-idle: 10
+    sentinel:
+      master: mymaster
+      nodes: localhost:26380,localhost:26381,localhost:26382

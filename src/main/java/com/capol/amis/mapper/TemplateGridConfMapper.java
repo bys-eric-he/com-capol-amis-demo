@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import org.springframework.stereotype.Repository;
 
 /**
  * <p>
@@ -16,14 +17,8 @@ import java.util.List;
  * @author He.Yong
  * @since 2022-06-28
  */
-@Mapper
+@Repository
 public interface TemplateGridConfMapper extends BaseMapper<TemplateGridConfDO> {
-    /**
-     * 获取业务主题字段配置信息
-     *
-     * @param subjectId
-     * @return
-     */
-    List<TemplateGridConfDO> getFieldsBySubjectId(@Param("subjectId") Long subjectId);
+
 }
 

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.capol.amis.mapper.QaBusinessSubjectMapper">
+
+    <resultMap id="BaseResultMap" type="com.capol.amis.entity.QaBusinessSubjectDO">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="enterpriseId" column="enterprise_id" jdbcType="BIGINT"/>
+            <result property="subjectName" column="subject_name" jdbcType="VARCHAR"/>
+            <result property="subjectCode" column="subject_code" jdbcType="VARCHAR"/>
+            <result property="parentId" column="parent_id" jdbcType="BIGINT"/>
+            <result property="orderNo" column="order_no" jdbcType="INTEGER"/>
+            <result property="level" column="level" jdbcType="TINYINT"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="creator" column="creator" jdbcType="VARCHAR"/>
+            <result property="creatorId" column="creator_id" jdbcType="BIGINT"/>
+            <result property="createdHostIp" column="created_host_ip" jdbcType="VARCHAR"/>
+            <result property="lastOperator" column="last_operator" jdbcType="VARCHAR"/>
+            <result property="lastOperatorId" column="last_operator_id" jdbcType="BIGINT"/>
+            <result property="updateHostIp" column="update_host_ip" jdbcType="VARCHAR"/>
+            <result property="menuIcon" column="menu_icon" jdbcType="VARCHAR"/>
+            <result property="configJson" column="config_json" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="tableSourceType" column="table_source_type" jdbcType="TINYINT"/>
+            <result property="jobId" column="job_id" jdbcType="BIGINT"/>
+            <result property="fileId" column="file_id" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,enterprise_id,subject_name,
+        subject_code,parent_id,order_no,
+        level,status,creator,
+        creator_id,created_host_ip,last_operator,
+        last_operator_id,update_host_ip,menu_icon,
+        config_json,create_time,update_time,
+        table_source_type,job_id,file_id
+    </sql>
+</mapper>
