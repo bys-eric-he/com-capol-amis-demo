@@ -4,24 +4,33 @@ import cn.hutool.core.util.HashUtil;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.capol.amis.entity.TemplateFormConfDO;
 import com.capol.amis.entity.TemplateFormDataDO;
 import com.capol.amis.entity.TemplateGridConfDO;
 import com.capol.amis.entity.TemplateGridDataDO;
-import com.capol.amis.model.BusinessSubjectDataModel;
+import com.capol.amis.model.param.BusinessSubjectDataModel;
+import com.capol.amis.model.result.FormDataInfoModel;
+import com.capol.amis.model.result.GridDataInfoModel;
 import com.capol.amis.service.*;
 import com.capol.amis.service.transaction.ServiceTransactionDefinition;
 import com.capol.amis.utils.BaseInfoContextHolder;
+import com.capol.amis.utils.RowConvertColUtil;
 import com.capol.amis.utils.SnowflakeUtil;
+import com.capol.amis.vo.DynamicDataVO;
+import com.capol.amis.vo.DynamicFieldsVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 表单数据录入服务类
@@ -122,12 +131,13 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                         }
                     }
                 } else if (fieldKey.startsWith("table_") && dataValue instanceof JSONArray) {
-                    log.info("解析列表(table)数据.....");
+                    log.info("-->解析列表(table)数据, 表名：{}", fieldKey);
+                    String tableName = fieldKey;
                     //如果是表格则将值转换成数组
                     JSONArray gridValues = (JSONArray) dataValue;
                     //遍历从表业务主题字段
                     for (Object obj : gridValues) {
-                        log.info("列表数据： {}", JSONObject.toJSONString(obj));
+                        log.info("-->列表数据： {}", JSONObject.toJSONString(obj));
                         JSONObject gridObject = (JSONObject) obj;
                         //从表数据行ID
                         Long subRowId = snowflakeUtil.nextId();
@@ -147,9 +157,9 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                                     dataDO.setProjectId(confDO.getProjectId());
                                     dataDO.setSubjectId(confDO.getSubjectId());
                                     dataDO.setTemplateId(confDO.getId());
+                                    dataDO.setTableName(tableName);
                                     dataDO.setFieldAlias(confDO.getFieldAlias());
                                     dataDO.setFieldKey(confDO.getFieldKey());
-
                                     dataDO.setFieldName(column);
                                     dataDO.setFieldType(confDO.getFieldType());
                                     dataDO.setFieldTextValue(value);
@@ -199,4 +209,222 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
         }
     }
 
+    /**
+     * 查询表单数据(主表+从表,行转列)
+     *
+     * @param subjectId
+     * @return
+     */
+    @Override
+    public List<FormDataInfoModel> queryFormDataList(Long subjectId) {
+        int formCounts = 0;
+        int gridCounts = 0;
+        int gridTables = 0;
+
+        QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
+        queryFormWrapper
+                .ge("status", 1)
+                .ge("subject_id", subjectId);
+        List<TemplateFormDataDO> formDataDOS = iTemplateFormDataService.list(queryFormWrapper);
+
+        if (formDataDOS != null && formDataDOS.size() > 0) {
+            Map<Object, Long> collectForm = formDataDOS.stream().collect(Collectors.groupingBy(r -> r.getRowId(), Collectors.counting()));
+            formCounts = collectForm.size();
+
+            log.info("-->主表数据：{}", JSONObject.toJSONString(formDataDOS));
+            log.info("-->主表行数：{}", formCounts);
+        }
+
+        QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
+        queryGridWrapper
+                .ge("status", 1)
+                .ge("subject_id", subjectId);
+        List<TemplateGridDataDO> gridDataDOS = iTemplateGridDataService.list(queryGridWrapper);
+
+        if (gridDataDOS != null && gridDataDOS.size() > 0) {
+            Map<Object, Long> collectGrid = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.getRowId(), Collectors.counting()));
+            gridCounts = collectGrid.size();
+
+            Map<Object, Long> collectTable = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.getTableName(), Collectors.counting()));
+            gridTables = collectTable.size();
+
+            log.info("-->从表数据：{}", JSONObject.toJSONString(gridDataDOS));
+            log.info("-->从表数量：{}", JSONObject.toJSONString(gridTables));
+            log.info("-->从表行数：{}", JSONObject.toJSONString(gridCounts));
+        }
+
+
+        try {
+            List<List<Object>> formList = RowConvertColUtil.doConvert(formDataDOS, "fieldKey", "enterpriseId", "fieldTextValue", true);
+
+            for (List<Object> list : formList) {
+                log.info("主表（行转列）当前行数据:{}", list.toString());
+            }
+
+            List<List<Object>> gridList = RowConvertColUtil.doConvert(gridDataDOS, "fieldKey", "enterpriseId", "fieldTextValue", true);
+
+            for (List<Object> list : gridList) {
+                log.info("从表（行转列）当前行数据:{}", list.toString());
+            }
+        } catch (Exception exception) {
+            log.error("-->行转列异常, 异常信息:,{}", exception.getMessage());
+        }
+
+
+        List<FormDataInfoModel> result = new ArrayList<>();
+
+        for (TemplateFormDataDO formDataDO : formDataDOS) {
+            List<GridDataInfoModel> gridDataInfoModels = new ArrayList<>();
+            List<TemplateGridDataDO> currentGridDatas = gridDataDOS.stream().filter(o -> o.getFormRowId().equals(formDataDO.getRowId())).collect(Collectors.toList());
+            if (currentGridDatas != null && currentGridDatas.size() > 0) {
+
+                for (TemplateGridDataDO currentGridDataDO : currentGridDatas) {
+                    GridDataInfoModel gridDataInfoModel = new GridDataInfoModel();
+                    BeanCopier gridBeanCopier = BeanCopier.create(TemplateGridDataDO.class, GridDataInfoModel.class, false);
+                    gridBeanCopier.copy(currentGridDataDO, gridDataInfoModel, null);
+                    gridDataInfoModels.add(gridDataInfoModel);
+                }
+            }
+
+            FormDataInfoModel formDataInfoModel = new FormDataInfoModel();
+            BeanCopier formBeanCopier = BeanCopier.create(TemplateFormDataDO.class, FormDataInfoModel.class, false);
+            formBeanCopier.copy(formDataDO, formDataInfoModel, null);
+
+            formDataInfoModel.setGridDataInfoModels(gridDataInfoModels);
+            result.add(formDataInfoModel);
+        }
+        return result;
+    }
+
+    /**
+     * 查询表单数据(行转列-仅主表数据)
+     *
+     * @param subjectId
+     * @return
+     */
+    @Override
+    public DynamicDataVO queryFormDataMaps(Long subjectId) {
+
+        //获取业务主题配置的字段信息
+        List<TemplateFormConfDO> formConfDOS = iTemplateFormConfService.getFieldsBySubjectId(subjectId);
+
+        if (CollectionUtils.isEmpty(formConfDOS)) {
+            return null;
+        }
+
+        //展示的字段表头
+        List<DynamicFieldsVO> fieldsVOS = new ArrayList<>();
+        for (TemplateFormConfDO confDO : formConfDOS) {
+            DynamicFieldsVO header = new DynamicFieldsVO();
+            header.setFieldId(confDO.getId());
+            header.setFieldAlias(confDO.getFieldAlias());
+            header.setFieldKey(confDO.getFieldKey());
+            header.setFieldName(confDO.getFieldName());
+            header.setFieldType(confDO.getFieldType());
+            header.setFieldOrder(confDO.getFieldOrder());
+            header.setTableName("t_template_form_data_"
+                    .concat(String.valueOf(BaseInfoContextHolder.getEnterpriseAndProjectInfo().getEnterpriseId())));
+
+            fieldsVOS.add(header);
+        }
+
+        int formCounts = 0;
+        int gridCounts = 0;
+        int gridTables = 0;
+
+        QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
+        queryFormWrapper
+                .eq("status", 1)
+                .eq("subject_id", subjectId);
+        List<Map<String, Object>> formDataDOS = iTemplateFormDataService.listMaps(queryFormWrapper);
+
+        if (CollectionUtils.isNotEmpty(formDataDOS)) {
+            Map<Object, Long> collectForm = formDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("row_id"), Collectors.counting()));
+            formCounts = collectForm.size();
+
+            log.info("-->主表数据：{}", JSONObject.toJSONString(formDataDOS));
+            log.info("-->主表行数：{}", formCounts);
+
+            QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
+            queryGridWrapper
+                    .eq("status", 1)
+                    .eq("subject_id", subjectId)
+                    .eq("form_row_id", formDataDOS.get(0).get("row_id"));
+            List<Map<String, Object>> gridDataDOS = iTemplateGridDataService.listMaps(queryGridWrapper);
+
+            if (CollectionUtils.isNotEmpty(gridDataDOS)) {
+                Map<Object, Long> collectGrid = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("row_id"), Collectors.counting()));
+                gridCounts = collectGrid.size();
+
+                Map<Object, Long> collectTable = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("table_name"), Collectors.counting()));
+                gridTables = collectTable.size();
+
+                log.info("-->从表数据：{}", JSONObject.toJSONString(gridDataDOS));
+                log.info("-->从表数量：{}", JSONObject.toJSONString(gridTables));
+                log.info("-->从表行数：{}", JSONObject.toJSONString(gridCounts));
+            }
+        }
+        DynamicDataVO result = new DynamicDataVO();
+        result.setHeader(fieldsVOS);
+        result.setRows(formDataDOS);
+        result.setTotalRows(Integer.toUnsignedLong(formCounts));
+        return result;
+    }
+
+    /**
+     * 获取指定表单数据明细（包括从表数据）
+     *
+     * @param subjectId
+     * @param rowId
+     * @return
+     */
+    @Override
+    public Map<String, Object> getDetail(Long subjectId, Long rowId) {
+        int formCounts = 0;
+        int gridCounts = 0;
+        int gridTables = 0;
+
+        Map<String, Object> result = new HashMap<>();
+        QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
+        queryFormWrapper
+                .eq("status", 1)
+                .eq("subject_id", subjectId)
+                .eq("row_id", rowId);
+
+        //查询主表记录
+        List<Map<String, Object>> formDataDOS = iTemplateFormDataService.listMaps(queryFormWrapper);
+        if (CollectionUtils.isNotEmpty(formDataDOS)) {
+            Map<Object, Long> collectForm = formDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("row_id"), Collectors.counting()));
+            formCounts = collectForm.size();
+
+            log.info("-->主表数据：{}", JSONObject.toJSONString(formDataDOS));
+            log.info("-->主表行数：{}", formCounts);
+
+            result.putAll(formDataDOS.get(0));
+
+
+            QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
+            queryGridWrapper
+                    .eq("status", 1)
+                    .eq("subject_id", subjectId)
+                    .eq("form_row_id", formDataDOS.get(0).get("row_id"));
+            //查询从表数据
+            List<Map<String, Object>> gridDataDOS = iTemplateGridDataService.listMaps(queryGridWrapper);
+
+            if (CollectionUtils.isNotEmpty(gridDataDOS)) {
+                Map<Object, Long> collectGrid = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("row_id"), Collectors.counting()));
+                gridCounts = collectGrid.size();
+
+                Map<Object, Long> collectTable = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("table_name"), Collectors.counting()));
+                gridTables = collectTable.size();
+
+                log.info("-->从表数据：{}", JSONObject.toJSONString(gridDataDOS));
+                log.info("-->从表数量：{}", JSONObject.toJSONString(gridTables));
+                log.info("-->从表行数：{}", JSONObject.toJSONString(gridCounts));
+
+                result.put("table_rows", gridDataDOS);
+            }
+        }
+        return result;
+    }
 }

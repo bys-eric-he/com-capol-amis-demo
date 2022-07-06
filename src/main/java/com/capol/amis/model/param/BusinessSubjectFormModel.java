@@ -1,4 +1,4 @@
-package com.capol.amis.model;
+package com.capol.amis.model.param;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

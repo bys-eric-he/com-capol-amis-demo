@@ -1,7 +1,6 @@
 package com.capol.amis.service;
 
-import com.capol.amis.model.BusinessSubjectFormModel;
-import com.capol.amis.model.FormFieldConfigModel;
+import com.capol.amis.model.param.BusinessSubjectFormModel;
 
 public interface IAmisFormConfigSevice {
 

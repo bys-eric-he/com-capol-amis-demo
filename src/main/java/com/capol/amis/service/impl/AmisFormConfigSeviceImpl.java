@@ -6,9 +6,9 @@ import com.capol.amis.entity.TemplateFormConfDO;
 import com.capol.amis.entity.TemplateGridConfDO;
 import com.capol.amis.enums.ComponentFieldEnum;
 import com.capol.amis.enums.SystemFieldEnum;
-import com.capol.amis.model.BusinessSubjectFormModel;
-import com.capol.amis.model.FormFieldConfigModel;
-import com.capol.amis.model.GridFieldConfigModel;
+import com.capol.amis.model.param.BusinessSubjectFormModel;
+import com.capol.amis.model.param.FormFieldConfigModel;
+import com.capol.amis.model.param.GridFieldConfigModel;
 import com.capol.amis.service.IAmisFormConfigSevice;
 import com.capol.amis.service.IBusinessSubjectService;
 import com.capol.amis.service.ITemplateFormConfService;
@@ -21,9 +21,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import springfox.documentation.swagger.common.XForwardPrefixPathAdjuster;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -108,8 +111,8 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
         // 主表(表单)字段
         List<JSONObject> formFields = new ArrayList<>();
 
-        // 从表(列表)字段
-        List<JSONObject> gridFields = new ArrayList<>();
+        // 从表(列表)字段(从表会有多个表的情况，因此需要使用Map)
+        Map<String, List<JSONObject>> gridFields = new HashMap<>();
 
         // 表单JSON对象
         JSONObject formTable = AmisUtil.getFormObject(configJson);
@@ -152,6 +155,7 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
             templateGridConfDO.setEnterpriseId(enterpriseId);
             templateGridConfDO.setProjectId(projectId);
             templateGridConfDO.setSubjectId(model.getSubjectId());
+            templateGridConfDO.setTableName(model.getTableName());
             templateGridConfDO.setFieldAlias(model.getFieldAlias());
             templateGridConfDO.setFieldKey(model.getFieldKey());
             templateGridConfDO.setFieldName(model.getFieldName());
@@ -174,7 +178,7 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
      * @param gridFields
      * @param formTable
      */
-    private void parseFormBody(List<JSONObject> formFields, List<JSONObject> gridFields, JSONObject formTable) throws Exception {
+    private void parseFormBody(List<JSONObject> formFields, Map<String, List<JSONObject>> gridFields, JSONObject formTable) throws Exception {
         if (formTable == null) {
             throw new Exception("表单组件不能为空，请重新检查再提交!");
         }
@@ -215,17 +219,22 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
      * @param gridFields
      * @return
      */
-    private List<GridFieldConfigModel> gridTableHandle(BusinessSubjectFormModel subjectFormModel, List<JSONObject> gridFields) {
+    private List<GridFieldConfigModel> gridTableHandle(BusinessSubjectFormModel subjectFormModel, Map<String, List<JSONObject>> gridFields) {
         //主表字段
         List<GridFieldConfigModel> subFields = new ArrayList<>();
         //构建系统字段
         buildGridSystemFields(subFields, subjectFormModel);
 
-        if (CollectionUtils.isNotEmpty(gridFields)) {
-            gridFields.forEach(jsonObject -> {
-                //根据组件类型构建字段Model
-                buildGridFields(subjectFormModel.getSubjectId(), subFields, jsonObject);
-            });
+        if (gridFields != null && gridFields.size() > 0) {
+            for (Map.Entry<String, List<JSONObject>> entry : gridFields.entrySet()) {
+                String tableName = entry.getKey();
+                List<JSONObject> value = entry.getValue();
+                value.forEach(jsonObject -> {
+                    //根据组件类型构建字段Model
+                    buildGridFields(subjectFormModel.getSubjectId(), tableName, subFields, jsonObject);
+                });
+
+            }
         }
 
         return subFields;
@@ -315,17 +324,18 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
      * 列表只有文本字段
      *
      * @param subjectId
+     * @param tableName
      * @param gridFields
      * @param jsonObject
      */
-    private void buildGridFields(Long subjectId, List<GridFieldConfigModel> gridFields, JSONObject jsonObject) {
+    private void buildGridFields(Long subjectId, String tableName, List<GridFieldConfigModel> gridFields, JSONObject jsonObject) {
         Long number = snowflakeUtil.nextId();
         String type = jsonObject.getString(AmisUtil.TYPE);
         ComponentFieldEnum fieldEnum = ComponentFieldEnum.getEnumByType(type);
         switch (fieldEnum.getGroup()) {
             case 1: {
                 //文本字段类
-                buildGridTextFieldModel(subjectId, number, fieldEnum, gridFields, jsonObject);
+                buildGridTextFieldModel(subjectId, number, fieldEnum, tableName, gridFields, jsonObject);
                 break;
             }
         }
@@ -358,17 +368,18 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
      * @param subjectId
      * @param number
      * @param fieldEnum
+     * @param tableName
      * @param gridFields
      * @param jsonObject
      */
-    private void buildGridTextFieldModel(Long subjectId, Long number, ComponentFieldEnum fieldEnum, List<GridFieldConfigModel> gridFields, JSONObject jsonObject) {
+    private void buildGridTextFieldModel(Long subjectId, Long number, ComponentFieldEnum fieldEnum, String tableName, List<GridFieldConfigModel> gridFields, JSONObject jsonObject) {
         String fieldName = "column_" + number;
         //是否有设置度度，有的话取设置的长度
         Integer maxLength = AmisUtil.getMaxLength(jsonObject);
         Integer fieldLength = maxLength == null ? fieldEnum.getFieldLength() : maxLength;
 
         //构建Model
-        GridFieldConfigModel fieldConfigModel = buildGridFieldConfigModel(subjectId, jsonObject, fieldName, fieldEnum, fieldLength);
+        GridFieldConfigModel fieldConfigModel = buildGridFieldConfigModel(subjectId, tableName, jsonObject, fieldName, fieldEnum, fieldLength);
 
         gridFields.add(fieldConfigModel);
     }
@@ -412,15 +423,17 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
      * 从表只有text组件
      *
      * @param subjectId
+     * @param tableName
      * @param jsonObject
      * @param fieldName
      * @param fieldEnum
      * @param fieldLength
      * @return
      */
-    private GridFieldConfigModel buildGridFieldConfigModel(Long subjectId, JSONObject jsonObject, String fieldName, ComponentFieldEnum fieldEnum, Integer fieldLength) {
+    private GridFieldConfigModel buildGridFieldConfigModel(Long subjectId, String tableName, JSONObject jsonObject, String fieldName, ComponentFieldEnum fieldEnum, Integer fieldLength) {
         GridFieldConfigModel fieldConfigModel = new GridFieldConfigModel();
         fieldConfigModel.setSubjectId(subjectId);
+        fieldConfigModel.setTableName(tableName);
         fieldConfigModel.setFieldKey(jsonObject.getString("name"));
         fieldConfigModel.setFieldAlias(jsonObject.getString("label"));
         fieldConfigModel.setFieldType(fieldEnum.getFieldType());
