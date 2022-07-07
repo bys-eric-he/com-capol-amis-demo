@@ -240,7 +240,7 @@ CREATE TABLE `t_dataset_field_324225698253233659` (
 
 
 /**
- * 数据集字段表
+ * 数据集关联表
  */
 DROP TABLE IF EXISTS `t_dataset_union_324225698253233659`;
 
@@ -307,7 +307,7 @@ CREATE TABLE `t_report_config_324225698253233659` (
  */
 DROP TABLE IF EXISTS `t_report_chart_config_324225698253233659`;
 
-CREATE TABLE `t_report_chart_config` (
+CREATE TABLE `t_report_chart_config_324225698253233659` (
   `id` bigint(20) NOT NULL COMMENT '主键Id',
   `report_id` bigint(20) NOT NULL COMMENT '报表id',
   `dataset_id` bigint(20) NOT NULL COMMENT '数据集id，关联 t_dataset 表的id',
@@ -340,7 +340,7 @@ CREATE TABLE `t_report_chart_config` (
  */
 DROP TABLE IF EXISTS `t_report_field_config_324225698253233659`;
 
-CREATE TABLE `t_report_field_config` (
+CREATE TABLE `t_report_field_config_324225698253233659` (
   `id` bigint(20) NOT NULL COMMENT '主键Id',
   `field_id` bigint(20) DEFAULT NULL COMMENT '绑定字段id,关联t_ware_table_field 表的id',
   `statistics_field_id` bigint(20) DEFAULT NULL COMMENT '统计范围字段id,关联t_ware_table_field 表的id',
