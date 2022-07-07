@@ -1,9 +1,11 @@
 package com.capol.amis.service.impl;
 
 import cn.hutool.core.lang.hash.CityHash;
+import com.capol.amis.annotation.DataSourceAnno;
 import com.capol.amis.entity.FormFieldConfigDO;
 import com.capol.amis.entity.FormFieldConfigExtDO;
 import com.capol.amis.entity.TemplateFormDataDO;
+import com.capol.amis.enums.DBTypeEnum;
 import com.capol.amis.enums.TableFieldTypeEnum;
 import com.capol.amis.enums.TableRelationTypeEnum;
 import com.capol.amis.enums.TableSourceTypeEnum;
@@ -12,14 +14,17 @@ import com.capol.amis.mapper.TemplateFormDataMapper;
 import com.capol.amis.service.ICfgDataConvertService;
 import com.capol.amis.service.ITemplateFormDataService;
 import com.capol.amis.utils.SnowflakeUtil;
+import com.google.common.base.CaseFormat;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -29,6 +34,8 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
+@DataSourceAnno(DBTypeEnum.QA_BIZ)
+// @Transactional
 public class CfgDataConvertServiceImpl implements ICfgDataConvertService {
     @Autowired
     private CfgDynamicDataMapper cfgDynamicDataMapper;
@@ -51,7 +58,7 @@ public class CfgDataConvertServiceImpl implements ICfgDataConvertService {
                 .collect(Collectors.groupingBy(FormFieldConfigDO::getTableName));
         tblMap.forEach((tbl, fields) -> {
             // fields -> (field_name, field_info)
-            Map<String, FormFieldConfigExtDO> fieldMap = new HashMap<>();
+            Map<String, FormFieldConfigExtDO> fieldMap = new ConcurrentHashMap<>();
             fields.forEach(field -> fieldMap.put(field.getFieldName(), field));
             List<TemplateFormDataDO> transferredData = transformDataByTblName(tbl, fieldMap);
             // TODO 插入到新表中!!!!
@@ -72,11 +79,14 @@ public class CfgDataConvertServiceImpl implements ICfgDataConvertService {
         for (String tbl : getRandSizeSet(tblMap.keySet(), limit)) {
             List<FormFieldConfigExtDO> fields = tblMap.get(tbl);
             Map<String, FormFieldConfigExtDO> fieldMap = new HashMap<>();
-            fields.forEach(field -> fieldMap.put(field.getFieldName(), field));
+            fields.forEach(field -> {
+                // 注意这里的field是驼峰式的，需要转化为下划线，防止不匹配
+                fieldMap.put(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, field.getFieldName()), field);
+            });
             List<TemplateFormDataDO> transferredData = transformDataByTblName(tbl, fieldMap);
-            if (CollectionUtils.isNotEmpty(transferredData)) {
+            /*if (CollectionUtils.isNotEmpty(transferredData)) {
                 transferredData.forEach(data -> log.info("=========>>>>> {}", data));
-            }
+            }*/
         }
     }
 
@@ -121,8 +131,12 @@ public class CfgDataConvertServiceImpl implements ICfgDataConvertService {
         List<TemplateFormDataDO> cfgForm = new LinkedList<>();
         dataMap.forEach((filed, value) -> {
             FormFieldConfigDO fieldConfig = fieldMap.get(filed);
+            if (fieldConfig == null) {
+                System.out.println("field =====>>>>> " + filed);
+                System.out.println("field map =====>>>>> " + fieldMap);
+            }
             // 只处理主表字段
-            if (fieldConfig.getTableRelationType().equals(TableRelationTypeEnum.MAIN_TYPE.getValue())) {
+            if (fieldConfig != null && fieldConfig.getTableRelationType().equals(TableRelationTypeEnum.MAIN_TYPE.getValue())) {
                 TemplateFormDataDO tfd = new TemplateFormDataDO();
                 // 基础信息
                 BeanUtils.copyProperties(fieldConfig, tfd);

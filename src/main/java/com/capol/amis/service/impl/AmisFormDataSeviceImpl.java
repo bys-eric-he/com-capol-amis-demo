@@ -10,7 +10,6 @@ import com.capol.amis.entity.TemplateGridConfDO;
 import com.capol.amis.entity.TemplateGridDataDO;
 import com.capol.amis.model.BusinessSubjectDataModel;
 import com.capol.amis.service.*;
-import com.capol.amis.service.transaction.ServiceTransactionDefinition;
 import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.SnowflakeUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +27,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition implements IAmisFormDataSevice {
+public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ implements IAmisFormDataSevice {
     /**
      * 雪花算法工具类
      */
@@ -67,7 +66,7 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
      */
     @Override
     public String insertData(BusinessSubjectDataModel businessSubjectDataModel) {
-        super.start();
+        //super.start();
         try {
             checkValidate(businessSubjectDataModel);
             // 根据业务主题ID获取表单配置信息
@@ -172,9 +171,9 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                 iTemplateGridDataService.saveBatch(templateGridDataDOS);
                 log.info("保存业务主题列表数据完成!!!");
             }
-            super.commit();
+            //super.commit();
         } catch (Exception exception) {
-            super.rollback();
+            //super.rollback();
             log.error("保存业务主题表单数据异常! 异常原因:" + exception.getMessage());
             log.error("异常详细信息：" + exception);
             return "****保存业务主题表单数据失败!!****";

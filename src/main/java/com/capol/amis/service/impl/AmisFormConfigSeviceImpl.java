@@ -13,7 +13,6 @@ import com.capol.amis.service.IAmisFormConfigSevice;
 import com.capol.amis.service.IBusinessSubjectService;
 import com.capol.amis.service.ITemplateFormConfService;
 import com.capol.amis.service.ITemplateGridConfService;
-import com.capol.amis.service.transaction.ServiceTransactionDefinition;
 import com.capol.amis.utils.AmisUtil;
 import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.SnowflakeUtil;
@@ -27,7 +26,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition implements IAmisFormConfigSevice {
+public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ implements IAmisFormConfigSevice {
     /**
      * 雪花算法工具类
      */
@@ -79,15 +78,15 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
         businessSubjectDO.setProjectId(projectId);
         businessSubjectDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
         try {
-            super.start();
+            //super.start();
             // 保存业务主题基本信息
             iBusinessSubjectService.save(businessSubjectDO);
             log.info("保存业务主题基本信息完成!");
             saveHandle(enterpriseId, projectId, subjectFormModel);
-            super.commit();
+            //super.commit();
         } catch (Exception exception) {
             log.error("保存表单字段配置信息异常, 异常原因：" + exception.getMessage());
-            super.rollback();
+            //super.rollback();
             return "****保存表单字段配置信息失败！****";
         }
 

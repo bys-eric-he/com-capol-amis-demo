@@ -17,8 +17,14 @@ import org.springframework.stereotype.Repository;
  * @author He.Yong
  * @since 2022-06-28
  */
-@Repository
+@Mapper
 public interface TemplateGridConfMapper extends BaseMapper<TemplateGridConfDO> {
-
+    /**
+     * 获取业务主题字段配置信息
+     *
+     * @param subjectId
+     * @return
+     */
+    List<TemplateGridConfDO> getFieldsBySubjectId(@Param("subjectId") Long subjectId);
 }
 

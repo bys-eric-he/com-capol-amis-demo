@@ -1,13 +1,13 @@
 package com.capol.amis.mapper;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.capol.amis.AmisApplicationTests;
-import com.capol.amis.entity.FormFieldConfigDO;
-import com.capol.amis.enums.TableSourceTypeEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Yaxi.Zhang
@@ -24,9 +24,22 @@ public class MapperTests extends AmisApplicationTests {
     @Autowired
     private QaBusinessSubjectMapper qaBusinessSubjectMapper;
 
+    @Autowired
+    private BusinessSubjectMapper businessSubjectMapper;
+
     @Test
     public void testMapper() {
+        List<Map<String, Object>> maps = formFieldConfigMapper.selectMaps(new QueryWrapper<>());
+        maps.forEach(System.out::println);
+        /*List<Map<String, Object>> datas = cfgDynamicDataMapper.getListMapDatas("cfg_table_1674397734739969");
+        System.out.println(datas);*/
 
+        /*formFieldConfigMapper.getTblsFromSubjectId(1744575823925249L).forEach(System.out::println);
+
+        List<BusinessSubjectDO> businessSubjectDOS = businessSubjectMapper.selectList(new QueryWrapper<>());
+        System.out.println(businessSubjectDOS);*/
+
+        //qaBusinessSubjectMapper.selectList(new QueryWrapper<>()).forEach(System.out::println);
     }
 
 }
