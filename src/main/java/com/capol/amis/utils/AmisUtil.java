@@ -10,6 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class AmisUtil {
@@ -89,7 +90,7 @@ public class AmisUtil {
      * @param gridFields
      * @param formTable
      */
-    public static void parseFormBody(List<JSONObject> formFields, List<JSONObject> gridFields, JSONObject formTable) {
+    public static void parseFormBody(List<JSONObject> formFields, Map<String, List<JSONObject>> gridFields, JSONObject formTable) {
         JSONArray formBody = null;
         if (formTable != null) {
             formBody = (JSONArray) formTable.get(BODY);
@@ -158,8 +159,12 @@ public class AmisUtil {
      * @param gridFields
      * @param gridTable
      */
-    private static void parseInputTable(List<JSONObject> gridFields, JSONObject gridTable) {
+    private static void parseInputTable(Map<String, List<JSONObject>> gridFields, JSONObject gridTable) {
+        //取出列名
         JSONArray cloumns = (JSONArray) gridTable.get(COLUMNS);
+        //取出表名
+        String tableName = gridTable.getString(NAME);
+        List<JSONObject> gridJsonObjects = new ArrayList<>();
         //遍历表格中的字段，目前只支持text类型
         for (Object cloumn : cloumns) {
             JSONObject jsonObject = (JSONObject) cloumn;
@@ -170,9 +175,11 @@ public class AmisUtil {
                 return;
             }
             if (FORM_TYPE.contains(type)) {
-                gridFields.add(jsonObject);
+                gridJsonObjects.add(jsonObject);
             }
         }
+
+        gridFields.put(tableName, gridJsonObjects);
     }
 
     /**

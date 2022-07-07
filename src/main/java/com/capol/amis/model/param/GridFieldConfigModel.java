@@ -1,21 +1,23 @@
-package com.capol.amis.model;
+package com.capol.amis.model.param;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
-
 /**
- * 业务主题表单配置信息
+ * 业务主题列表配置信息
  */
-@ApiModel(value = "业务主题表单字段信息")
+@ApiModel(value = "业务主题列表字段信息")
 @Data
-public class FormFieldConfigModel {
-
+public class GridFieldConfigModel {
     @ApiModelProperty(value = "业务主题ID")
     @NotNull(message = "业务主题ID不能为空!")
     private Long subjectId;
+
+    @ApiModelProperty(value = "列表名称")
+    @NotNull(message = "列表名称不能为空!")
+    private String tableName;
 
     @ApiModelProperty(value = "字段名注释")
     @NotNull(message = "字段名注释不能为空!")
@@ -44,5 +46,4 @@ public class FormFieldConfigModel {
     @ApiModelProperty(value = "组件类型")
     @NotNull(message = "组件类型不能为空!")
     private String componentType;
-
 }
