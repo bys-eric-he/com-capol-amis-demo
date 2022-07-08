@@ -33,6 +33,16 @@ public class TemplateFormConfDO extends BaseInfo {
     private Long subjectId;
 
     /**
+     * 数据表ID
+     */
+    private Long tableId;
+
+    /**
+     * 数据表名称
+     */
+    private String tableName;
+
+    /**
      * 字段标识
      */
     private String fieldKey;

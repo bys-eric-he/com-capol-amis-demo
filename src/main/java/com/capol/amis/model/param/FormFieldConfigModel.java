@@ -17,6 +17,14 @@ public class FormFieldConfigModel {
     @NotNull(message = "业务主题ID不能为空!")
     private Long subjectId;
 
+    @ApiModelProperty(value = "数据表ID")
+    @NotNull(message = "数据表ID不能为空!")
+    private Long tableId;
+
+    @ApiModelProperty(value = "列表名称")
+    @NotNull(message = "列表名称不能为空!")
+    private String tableName;
+
     @ApiModelProperty(value = "字段名注释")
     @NotNull(message = "字段名注释不能为空!")
     private String fieldAlias;

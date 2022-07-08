@@ -8,7 +8,9 @@
         <result column="enterprise_id" property="enterpriseId" />
         <result column="project_id" property="projectId" />
         <result column="subject_id" property="subjectId" />
-        <result column="table_name" property="tableName" />
+        <result column="form_table_id" property="formTableId" />
+        <result column="grid_table_id" property="gridTableId" />
+        <result column="grid_table_name" property="gridTableName" />
         <result column="field_key" property="fieldKey" />
         <result column="field_alias" property="fieldAlias" />
         <result column="field_name" property="fieldName" />
@@ -31,7 +33,9 @@
         `enterprise_id`,
         `project_id`,
         `subject_id`,
-        `table_name`,
+        `form_table_id`,
+        `grid_table_id`,
+        `grid_table_name`,
         `field_key`,
         `field_alias`,
         `field_name`,
@@ -54,7 +58,9 @@
             `enterprise_id`,
             `project_id`,
             `subject_id`,
-            `table_name`,
+            `form_table_id`,
+            `grid_table_id`,
+            `grid_table_name`,
             `field_key`,
             `field_alias`,
             `field_name`,

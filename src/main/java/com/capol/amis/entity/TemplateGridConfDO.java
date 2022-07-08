@@ -33,9 +33,19 @@ public class TemplateGridConfDO extends BaseInfo {
     private Long subjectId;
 
     /**
-     * 列表名称
+     * 数据主表ID
      */
-    private String tableName;
+    private Long formTableId;
+
+    /**
+     * 数据从表ID
+     */
+    private Long gridTableId;
+
+    /**
+     * 数据从表名称
+     */
+    private String gridTableName;
 
     /**
      * 字段标识
