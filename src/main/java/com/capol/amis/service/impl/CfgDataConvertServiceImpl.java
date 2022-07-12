@@ -79,14 +79,11 @@ public class CfgDataConvertServiceImpl implements ICfgDataConvertService {
         for (String tbl : getRandSizeSet(tblMap.keySet(), limit)) {
             List<FormFieldConfigExtDO> fields = tblMap.get(tbl);
             Map<String, FormFieldConfigExtDO> fieldMap = new HashMap<>();
-            fields.forEach(field -> {
-                // 注意这里的field是驼峰式的，需要转化为下划线，防止不匹配
-                fieldMap.put(CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, field.getFieldName()), field);
-            });
+            fields.forEach(field -> fieldMap.put(field.getFieldName(), field));
             List<TemplateFormDataDO> transferredData = transformDataByTblName(tbl, fieldMap);
-            /*if (CollectionUtils.isNotEmpty(transferredData)) {
+            if (CollectionUtils.isNotEmpty(transferredData)) {
                 transferredData.forEach(data -> log.info("=========>>>>> {}", data));
-            }*/
+            }
         }
     }
 

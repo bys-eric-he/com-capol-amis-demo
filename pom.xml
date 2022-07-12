@@ -20,6 +20,7 @@
         <springboot.version>2.4.5</springboot.version>
         <springcloud.alibaba.version>2021.1</springcloud.alibaba.version>
         <springcloud.starter.version>3.1.0</springcloud.starter.version>
+        <guava.version>30.1.1-jre</guava.version>
     </properties>
 
     <!--多profile-->
@@ -68,17 +69,17 @@
             <version>${springboot.version}</version>
         </dependency>
         <!--nacos-config-->
-        <dependency>
+        <!--<dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
             <version>${springcloud.alibaba.version}</version>
-        </dependency>
+        </dependency>-->
         <!--nacos-discovery-->
-        <dependency>
+        <!--<dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
             <version>${springcloud.alibaba.version}</version>
-        </dependency>
+        </dependency>-->
         <!--web + actuator-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -86,11 +87,11 @@
             <version>${springboot.version}</version>
         </dependency>
         <!--springcloud starter-->
-        <dependency>
+        <!--<dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-bootstrap</artifactId>
             <version>${springcloud.starter.version}</version>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
@@ -186,6 +187,11 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
     </dependencies>
 

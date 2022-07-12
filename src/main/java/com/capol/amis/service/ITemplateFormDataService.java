@@ -3,7 +3,10 @@ package com.capol.amis.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.capol.amis.entity.TemplateFormDataDO;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * <p>
@@ -21,4 +24,12 @@ public interface ITemplateFormDataService extends IService<TemplateFormDataDO> {
      * @return
      */
     List<TemplateFormDataDO> queryFromDataBySubjectId(Long subjectId);
+
+
+    /**
+     * 依据表ID获取分类的数据数据 (rowId, (fieldName, data))
+     * @param tableId 表ID
+     * @return 对应的分类数据
+     */
+    Map<Long, Map<String, Optional<TemplateFormDataDO>>> queryClassifiedFromDataByTableId(Long tableId);
 }
