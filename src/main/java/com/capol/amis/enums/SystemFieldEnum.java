@@ -1,6 +1,5 @@
 package com.capol.amis.enums;
 
-import io.swagger.models.auth.In;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -67,7 +66,7 @@ public enum SystemFieldEnum {
      *
      * @return
      */
-    public static List<SystemFieldEnum> getMainTableEnum() {
+    public static List<SystemFieldEnum> getSystemFieldEnum() {
         List<SystemFieldEnum> systemFieldEnums = Arrays.stream(SystemFieldEnum.values()).collect(Collectors.toList());
         return systemFieldEnums;
     }

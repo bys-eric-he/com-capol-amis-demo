@@ -43,6 +43,18 @@ public class FormDataInfoModel extends BaseModel {
     private Long subjectId;
 
     /**
+     * 数据表ID
+     */
+    @ApiModelProperty(value = "数据表ID")
+    private Long tableId;
+
+    /**
+     * 列表名称
+     */
+    @ApiModelProperty(value = "列表名称")
+    private String tableName;
+
+    /**
      * 字段标识
      */
     @ApiModelProperty(value = "字段标识")

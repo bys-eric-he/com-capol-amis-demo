@@ -33,6 +33,16 @@ public class TemplateFormConfDO extends BaseInfo {
     private Long subjectId;
 
     /**
+     * 数据表ID
+     */
+    private Long tableId;
+
+    /**
+     * 数据表名称
+     */
+    private String tableName;
+
+    /**
      * 字段标识
      */
     private String fieldKey;
@@ -53,7 +63,17 @@ public class TemplateFormConfDO extends BaseInfo {
     private String fieldType;
 
     /**
+     * 字段长度
+     */
+    private Integer fieldLength;
+
+    /**
      * 字段顺序
      */
     private Integer fieldOrder;
+
+    /**
+     * 组件类型
+     */
+    private String componentType;
 }

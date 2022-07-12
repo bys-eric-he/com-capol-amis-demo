@@ -43,14 +43,24 @@ public class TemplateGridDataDO extends BaseInfo {
     private Long projectId;
 
     /**
+     * 数据主表ID
+     */
+    private Long formTableId;
+
+    /**
+     * 数据从表ID
+     */
+    private Long gridTableId;
+
+    /**
+     * 数据从表名称
+     */
+    private String gridTableName;
+
+    /**
      * 业务主题ID
      */
     private Long subjectId;
-
-    /**
-     * 列表名称
-     */
-    private String tableName;
 
     /**
      * 字段标识
