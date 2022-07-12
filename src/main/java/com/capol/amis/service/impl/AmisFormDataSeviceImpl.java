@@ -498,7 +498,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
         List<Map<String, Object>> formDataDOS = iTemplateFormDataService.listMaps(queryFormWrapper);
 
         if (CollectionUtils.isNotEmpty(formDataDOS)) {
-            Map<Object, Long> collectForm = formDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("row_id"), Collectors.counting()));
+            Map<Object, Long> collectForm = formDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("rowId"), Collectors.counting()));
             formCounts = collectForm.size();
 
             log.info("-->主表数据：{}", JSONObject.toJSONString(formDataDOS));
@@ -508,14 +508,14 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             queryGridWrapper
                     .eq("status", 1)
                     .eq("subject_id", subjectId)
-                    .eq("form_row_id", formDataDOS.get(0).get("row_id"));
+                    .eq("form_row_id", formDataDOS.get(0).get("rowId"));
             List<Map<String, Object>> gridDataDOS = iTemplateGridDataService.listMaps(queryGridWrapper);
 
             if (CollectionUtils.isNotEmpty(gridDataDOS)) {
-                Map<Object, Long> collectGrid = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("row_id"), Collectors.counting()));
+                Map<Object, Long> collectGrid = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("rowId"), Collectors.counting()));
                 gridCounts = collectGrid.size();
 
-                Map<Object, Long> collectTable = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("grid_table_id"), Collectors.counting()));
+                Map<Object, Long> collectTable = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("gridTableId"), Collectors.counting()));
                 gridTables = collectTable.size();
 
                 log.info("-->从表数据：{}", JSONObject.toJSONString(gridDataDOS));
@@ -553,7 +553,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
         //查询主表记录
         List<Map<String, Object>> formDataDOS = iTemplateFormDataService.listMaps(queryFormWrapper);
         if (CollectionUtils.isNotEmpty(formDataDOS)) {
-            Map<Object, Long> collectForm = formDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("row_id"), Collectors.counting()));
+            Map<Object, Long> collectForm = formDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("rowId"), Collectors.counting()));
             formCounts = collectForm.size();
 
             log.info("-->主表数据：{}", JSONObject.toJSONString(formDataDOS));
@@ -566,15 +566,15 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             queryGridWrapper
                     .eq("status", 1)
                     .eq("subject_id", subjectId)
-                    .eq("form_row_id", formDataDOS.get(0).get("row_id"));
+                    .eq("form_row_id", formDataDOS.get(0).get("rowId"));
             //查询从表数据
             List<Map<String, Object>> gridDataDOS = iTemplateGridDataService.listMaps(queryGridWrapper);
 
             if (CollectionUtils.isNotEmpty(gridDataDOS)) {
-                Map<Object, Long> collectGrid = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("row_id"), Collectors.counting()));
+                Map<Object, Long> collectGrid = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("rowId"), Collectors.counting()));
                 gridCounts = collectGrid.size();
 
-                Map<Object, Long> collectTable = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("grid_table_id"), Collectors.counting()));
+                Map<Object, Long> collectTable = gridDataDOS.stream().collect(Collectors.groupingBy(r -> r.get("gridTableId"), Collectors.counting()));
                 gridTables = collectTable.size();
 
                 log.info("-->从表数据：{}", JSONObject.toJSONString(gridDataDOS));

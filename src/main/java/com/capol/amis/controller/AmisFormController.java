@@ -2,14 +2,10 @@ package com.capol.amis.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.capol.amis.annotation.RepeatSubmit;
-import com.capol.amis.model.param.BusinessSubjectDataModel;
 import com.capol.amis.model.param.BusinessSubjectFormModel;
-import com.capol.amis.model.result.FormDataInfoModel;
 import com.capol.amis.response.CommonResult;
 import com.capol.amis.response.ResultCode;
 import com.capol.amis.service.IAmisFormConfigSevice;
-import com.capol.amis.service.IAmisFormDataSevice;
-import com.capol.amis.vo.DynamicDataVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -23,9 +19,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.Map;
 
 
 @RequestMapping("/api/amis/config")
