@@ -25,13 +25,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition implements IAmisFormConfigSevice {
+public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ implements IAmisFormConfigSevice {
     /**
      * 雪花算法工具类
      */
@@ -63,6 +64,7 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
      * @param subjectFormModel
      * @return
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel) {
         boolean isExist = false;
@@ -93,7 +95,7 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
         businessSubjectDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
 
         try {
-            super.start();
+            //super.start();
             if (isExist) {
                 QueryWrapper<BusinessSubjectDO> updateFormWrapper = new QueryWrapper<>();
                 updateFormWrapper
@@ -109,10 +111,10 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
             }
 
             saveHandle(enterpriseId, projectId, subjectFormModel);
-            super.commit();
+            //super.commit();
         } catch (Exception exception) {
             log.error("保存表单字段配置信息异常, 异常原因：" + exception.getMessage());
-            super.rollback();
+            //super.rollback();
             return "****保存表单字段配置信息失败！****";
         }
 

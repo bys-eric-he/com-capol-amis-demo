@@ -32,32 +32,33 @@ import java.util.Map;
 /**
  * 配置加载表名处理器
  */
-@EnableTransactionManagement // 开启事务
 @Configuration
+@EnableTransactionManagement
 @MapperScan(basePackages = "com.capol.amis.mapper", sqlSessionFactoryRef = "datasourceSqlSessionFactory")
 @Slf4j
 public class MybatisPlusConfig {
-    /*@Bean(name = "datasource")
+    /*
+    @Bean(name = "datasource")
     @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource druidDataSource() {
         DruidDataSource druidDataSource = DruidDataSourceBuilder.create().build();
         return druidDataSource;
-    }*/
+    }
 
-    /*@Bean(name = "qcDatasource")
+    @Bean(name = "qcDatasource")
     @Primary
     @ConfigurationProperties(prefix = "spring.datasource.dynamic.datasource.master")
     public DataSource qcDatasource() {
         DruidDataSource druidDataSource = DruidDataSourceBuilder.create().build();
         return druidDataSource;
-    }*/
+    }
 
-    /*@Bean(name = "datasourceTransactionManager")
+    @Bean(name = "datasourceTransactionManager")
     public DataSourceTransactionManager masterTransactionManager(@Qualifier(value = "datasource") DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
-    }*/
+    }
 
-    /*@Bean(name = "datasourceSqlSessionFactory")
+    @Bean(name = "datasourceSqlSessionFactory")
     @ConfigurationPropertiesBinding()
     public SqlSessionFactory sqlSessionFactory(@Qualifier(value = "qcDatasource") DataSource dataSource) throws Exception {
         MybatisSqlSessionFactoryBean factoryBean = new MybatisSqlSessionFactoryBean();
@@ -69,7 +70,15 @@ public class MybatisPlusConfig {
         //配置打印SQL语句
         factoryBean.setConfiguration(printSQLConfig());
         return factoryBean.getObject();
-    }*/
+    }
+
+    public MybatisConfiguration printSQLConfig() {
+        MybatisConfiguration config = new MybatisConfiguration();
+        config.setLogImpl(StdOutImpl.class);
+
+        return config;
+    }
+    */
 
     @Bean(name = "amisDemo")
     @ConfigurationProperties(prefix = "spring.datasource.druid.amis-demo")
@@ -127,10 +136,15 @@ public class MybatisPlusConfig {
         return sqlSessionFactory.getObject();
     }
 
+    /**
+     * 动态事务配置
+     *
+     * @param dataSource
+     * @return
+     */
     @Bean(name = "multipleTransactionManager")
     @Primary
     public DataSourceTransactionManager multipleTransactionManager(@Qualifier("multipleDataSource") DataSource dataSource) {
-        // 动态事务配置
         return new DataSourceTransactionManager(dataSource);
     }
 
@@ -153,14 +167,4 @@ public class MybatisPlusConfig {
         interceptor.addInnerInterceptor(dynamicTableNameInnerInterceptor);
         return interceptor;
     }
-
-    /**
-     * 打印SQL语句
-     */
-    /*public MybatisConfiguration printSQLConfig() {
-        MybatisConfiguration config = new MybatisConfiguration();
-        config.setLogImpl(StdOutImpl.class);
-
-        return config;
-    }*/
 }

@@ -26,11 +26,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.capol.amis.enums.SystemFieldEnum.*;
+import static com.capol.amis.enums.SystemFieldEnum.getSystemFieldEnum;
 
 /**
  * 表单数据录入服务类
@@ -74,11 +75,13 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
      * @param businessSubjectDataModel
      * @return
      */
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public String insertData(BusinessSubjectDataModel businessSubjectDataModel) {
         //super.start();
         try {
             checkValidate(businessSubjectDataModel);
+
             // 根据业务主题ID获取表单配置信息
             List<TemplateFormConfDO> templateFormConfDOS = iTemplateFormConfService.getFieldsBySubjectId(businessSubjectDataModel.getSubjectId());
             if (CollectionUtils.isEmpty(templateFormConfDOS)) {
@@ -104,6 +107,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
 
             //主表数据行ID
             Long rowId = snowflakeUtil.nextId();
+
             //遍历传入的JSON数据
             for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
                 String fieldKey = entry.getKey();
@@ -133,7 +137,6 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                             templateFormDataDOS.add(dataDO);
                         }
                     }
-
                 } else if (fieldKey.startsWith("table_") && dataValue instanceof JSONArray) {
                     log.info("-->解析列表(table)数据, 表名：{}", fieldKey);
                     String tableName = fieldKey;
