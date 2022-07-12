@@ -103,9 +103,6 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
             //从表数据
             List<TemplateGridDataDO> templateGridDataDOS = new ArrayList<>();
 
-            //系统数据
-            List<SystemFieldEnum> systemFieldEnums = getSystemFieldEnum();
-
             //主表数据行ID
             Long rowId = snowflakeUtil.nextId();
             //遍历传入的JSON数据
@@ -137,6 +134,7 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                             templateFormDataDOS.add(dataDO);
                         }
                     }
+
                 } else if (fieldKey.startsWith("table_") && dataValue instanceof JSONArray) {
                     log.info("-->解析列表(table)数据, 表名：{}", fieldKey);
                     String tableName = fieldKey;
@@ -181,99 +179,20 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
                     }
                 }
             }
+            //主表系统字段值构建
+            buildFormSystemDataFields(businessSubjectDataModel.getSubjectId(), rowId, templateFormDataDOS, templateFormConfDOS);
 
-            String[] columns = {"id", "status"};
-            //添加系统字段数据
-            for (SystemFieldEnum systemFieldEnum : getSystemFieldEnum()) {
-                String column = systemFieldEnum.getFieldName().toLowerCase();
-                String value = null;
+            Map<String, List<Long>> gridDataDOMaps = templateGridDataDOS.stream().collect(Collectors.groupingBy(TemplateGridDataDO::getGridTableName, Collectors.mapping(TemplateGridDataDO::getRowId, Collectors.toList())));
 
-                //排除ID和STATUS字段
-                if (Arrays.asList(columns).contains(column)) {
-                    continue;
+            //从表系统字段值构建
+            for (Map.Entry<String, List<Long>> entry : gridDataDOMaps.entrySet()) {
+                String gridTableName = entry.getKey();
+                List<Long> gridRowIds = entry.getValue().stream().distinct().collect(Collectors.toList());
+                for (Long gridRowId : gridRowIds) {
+                    buildGridSystemDataFields(businessSubjectDataModel.getSubjectId(), rowId, gridRowId, gridTableName, templateGridDataDOS, templateGridConfDOS);
                 }
-
-                switch (systemFieldEnum) {
-                    case CREATE_TIME: {
-                        value = DateUtil.format(BaseInfoContextHolder.getSystemInfo().getUpdTime(),"yyyy-MM-dd HH:mm:ss");
-                        break;
-                    }
-                    case CREATOR: {
-                        value = BaseInfoContextHolder.getSystemInfo().getUserName();
-                        break;
-                    }
-                    case CREATOR_ID: {
-                        value = BaseInfoContextHolder.getSystemInfo().getUserId().toString();
-                        break;
-                    }
-                    case UPDATE_TIME: {
-                        value = DateUtil.format(BaseInfoContextHolder.getSystemInfo().getUpdTime(),"yyyy-MM-dd HH:mm:ss");
-                        break;
-                    }
-                    case LAST_OPERATOR: {
-                        value = BaseInfoContextHolder.getSystemInfo().getUserName();
-                        break;
-                    }
-                    case UPDATE_HOST_IP: {
-                        value = BaseInfoContextHolder.getSystemInfo().getUserIp();
-                        break;
-                    }
-                    case CREATED_HOST_IP: {
-                        value = BaseInfoContextHolder.getSystemInfo().getUserIp();
-                        break;
-                    }
-                    case LAST_OPERATOR_ID: {
-                        value = BaseInfoContextHolder.getSystemInfo().getUserId().toString();
-                        break;
-                    }
-                }
-
-                //找到当前系统字段在配置表中的信息
-                Optional<TemplateFormConfDO> optionalTemplateFormConfDO = templateFormConfDOS.stream().filter(k -> k.getFieldKey().equals(column)).findFirst();
-                if (optionalTemplateFormConfDO.isPresent()) {
-                    //添加主表系统字段数据
-                    TemplateFormDataDO dataDO = new TemplateFormDataDO();
-                    dataDO.setRowId(rowId);
-                    dataDO.setEnterpriseId(optionalTemplateFormConfDO.get().getEnterpriseId());
-                    dataDO.setProjectId(optionalTemplateFormConfDO.get().getProjectId());
-                    dataDO.setSubjectId(businessSubjectDataModel.getSubjectId());
-                    dataDO.setTemplateId(optionalTemplateFormConfDO.get().getId());
-                    dataDO.setTableId(optionalTemplateFormConfDO.get().getTableId());
-                    dataDO.setTableName(optionalTemplateFormConfDO.get().getTableName());
-                    dataDO.setFieldAlias(systemFieldEnum.getFieldAlias());
-                    dataDO.setFieldKey(systemFieldEnum.getFieldName());
-                    dataDO.setFieldName(column);
-                    dataDO.setFieldType(systemFieldEnum.getFieldType());
-                    dataDO.setFieldTextValue(value);
-                    dataDO.setFieldHashValue(HashUtil.mixHash(value));
-                    dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
-                    templateFormDataDOS.add(dataDO);
-                }
-
-                //找到当前系统字段在配置表中的信息
-                /*Optional<TemplateGridConfDO> optionalTemplateGridConfDO = templateGridConfDOS.stream().filter(k -> k.getFieldKey().equals(k.getFieldKey().toLowerCase())).findFirst();
-                if (optionalTemplateGridConfDO.isPresent()) {
-                    //添加从表系统字段数据
-                    TemplateGridDataDO dataDO = new TemplateGridDataDO();
-                    dataDO.setRowId(subRowId);
-                    dataDO.setFormRowId(rowId);
-                    dataDO.setEnterpriseId(confDO.getEnterpriseId());
-                    dataDO.setProjectId(confDO.getProjectId());
-                    dataDO.setSubjectId(confDO.getSubjectId());
-                    dataDO.setTemplateId(confDO.getId());
-                    dataDO.setFormTableId(confDO.getFormTableId());
-                    dataDO.setGridTableId(confDO.getGridTableId());
-                    dataDO.setGridTableName(tableName);
-                    dataDO.setFieldAlias(confDO.getFieldAlias());
-                    dataDO.setFieldKey(confDO.getFieldKey());
-                    dataDO.setFieldName(column);
-                    dataDO.setFieldType(confDO.getFieldType());
-                    dataDO.setFieldTextValue(value);
-                    dataDO.setFieldHashValue(HashUtil.mixHash(value));
-                    dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
-                    templateGridDataDOS.add(dataDO);
-                }*/
             }
+
 
             if (templateFormDataDOS.size() > 0) {
                 iTemplateFormDataService.saveBatch(templateFormDataDOS);
@@ -297,55 +216,142 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
     /**
      * 构建主表系统字段
      *
-     * @param formTableId
-     * @param formTableName
-     * @param mainDataFields
-     * @param subjectDataModel
+     * @param subjectId
+     * @param rowId
+     * @param templateFormDataDOS
+     * @param templateFormConfDOS
      */
-    private void buildFormSystemDataFields(Long formTableId, String formTableName, List<TemplateFormDataDO> mainDataFields,
-                                           BusinessSubjectDataModel subjectDataModel) {
+    private void buildFormSystemDataFields(Long subjectId, Long rowId, List<TemplateFormDataDO> templateFormDataDOS,
+                                           List<TemplateFormConfDO> templateFormConfDOS) {
+        String[] columns = {"id", "status"};
+        //添加系统字段数据
+        for (SystemFieldEnum systemFieldEnum : getSystemFieldEnum()) {
+            String column = systemFieldEnum.getFieldName().toLowerCase();
+            String value = null;
 
-        List<SystemFieldEnum> systemFieldEnums = getSystemFieldEnum();
+            //排除ID和STATUS字段
+            if (Arrays.asList(columns).contains(column)) {
+                continue;
+            }
 
-        systemFieldEnums.forEach(systemFieldEnum -> {
-            TemplateFormDataDO templateFormDataDO = new TemplateFormDataDO();
-            templateFormDataDO.setSubjectId(subjectDataModel.getSubjectId());
-            templateFormDataDO.setTableId(formTableId);
-            templateFormDataDO.setTableName(formTableName);
-            templateFormDataDO.setFieldKey(systemFieldEnum.getFieldName());
-            templateFormDataDO.setFieldAlias(systemFieldEnum.getFieldAlias());
-            templateFormDataDO.setFieldName(systemFieldEnum.getFieldName());
-            templateFormDataDO.setFieldType(systemFieldEnum.getFieldType());
-            mainDataFields.add(templateFormDataDO);
-        });
+            switch (systemFieldEnum) {
+                case UPDATE_TIME:
+                case CREATE_TIME: {
+                    value = DateUtil.format(BaseInfoContextHolder.getSystemInfo().getUpdTime(), "yyyy-MM-dd HH:mm:ss");
+                    break;
+                }
+                case LAST_OPERATOR:
+                case CREATOR: {
+                    value = BaseInfoContextHolder.getSystemInfo().getUserName();
+                    break;
+                }
+                case LAST_OPERATOR_ID:
+                case CREATOR_ID: {
+                    value = BaseInfoContextHolder.getSystemInfo().getUserId().toString();
+                    break;
+                }
+                case CREATED_HOST_IP:
+                case UPDATE_HOST_IP: {
+                    value = BaseInfoContextHolder.getSystemInfo().getUserIp();
+                    break;
+                }
+            }
+
+            //找到当前系统字段在配置表中的信息
+            Optional<TemplateFormConfDO> optionalTemplateFormConfDO = templateFormConfDOS.stream().filter(k -> k.getFieldKey().equals(column)).findFirst();
+            if (optionalTemplateFormConfDO.isPresent()) {
+                //添加主表系统字段数据
+                TemplateFormDataDO dataDO = new TemplateFormDataDO();
+                dataDO.setRowId(rowId);
+                dataDO.setEnterpriseId(optionalTemplateFormConfDO.get().getEnterpriseId());
+                dataDO.setProjectId(optionalTemplateFormConfDO.get().getProjectId());
+                dataDO.setSubjectId(subjectId);
+                dataDO.setTemplateId(optionalTemplateFormConfDO.get().getId());
+                dataDO.setTableId(optionalTemplateFormConfDO.get().getTableId());
+                dataDO.setTableName(optionalTemplateFormConfDO.get().getTableName());
+                dataDO.setFieldAlias(systemFieldEnum.getFieldAlias());
+                dataDO.setFieldKey(systemFieldEnum.getFieldName());
+                dataDO.setFieldName(column);
+                dataDO.setFieldType(systemFieldEnum.getFieldType());
+                dataDO.setFieldTextValue(value);
+                dataDO.setFieldHashValue(HashUtil.mixHash(value));
+                dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+                templateFormDataDOS.add(dataDO);
+            }
+        }
     }
 
     /**
      * 构建从表系统字段
      *
-     * @param formTableId
-     * @param gridTableId
+     * @param subjectId
+     * @param rowId
+     * @param subRowId
      * @param gridTableName
-     * @param subDataFields
-     * @param subjectDataModel
+     * @param templateGridDataDOS
+     * @param templateGridConfDOS
      */
-    private void buildGridSystemDataFields(Long formTableId, Long gridTableId, String gridTableName,
-                                           List<TemplateGridDataDO> subDataFields, BusinessSubjectDataModel subjectDataModel) {
+    private void buildGridSystemDataFields(Long subjectId, Long rowId, Long subRowId, String gridTableName, List<TemplateGridDataDO> templateGridDataDOS,
+                                           List<TemplateGridConfDO> templateGridConfDOS) {
+        String[] columns = {"id", "status"};
+        //添加系统字段数据
+        for (SystemFieldEnum systemFieldEnum : getSystemFieldEnum()) {
+            String column = systemFieldEnum.getFieldName().toLowerCase();
+            String value = null;
 
-        List<SystemFieldEnum> systemFieldEnums = getSystemFieldEnum();
+            //排除ID和STATUS字段
+            if (Arrays.asList(columns).contains(column)) {
+                continue;
+            }
 
-        systemFieldEnums.forEach(systemFieldEnum -> {
-            TemplateGridDataDO templateGridDataDO = new TemplateGridDataDO();
-            templateGridDataDO.setSubjectId(subjectDataModel.getSubjectId());
-            templateGridDataDO.setFormTableId(formTableId);
-            templateGridDataDO.setGridTableId(gridTableId);
-            templateGridDataDO.setGridTableName(gridTableName);
-            templateGridDataDO.setFieldKey(systemFieldEnum.getFieldName());
-            templateGridDataDO.setFieldAlias(systemFieldEnum.getFieldAlias());
-            templateGridDataDO.setFieldName(systemFieldEnum.getFieldName());
-            templateGridDataDO.setFieldType(systemFieldEnum.getFieldType());
-            subDataFields.add(templateGridDataDO);
-        });
+            switch (systemFieldEnum) {
+                case UPDATE_TIME:
+                case CREATE_TIME: {
+                    value = DateUtil.format(BaseInfoContextHolder.getSystemInfo().getUpdTime(), "yyyy-MM-dd HH:mm:ss");
+                    break;
+                }
+                case LAST_OPERATOR:
+                case CREATOR: {
+                    value = BaseInfoContextHolder.getSystemInfo().getUserName();
+                    break;
+                }
+                case LAST_OPERATOR_ID:
+                case CREATOR_ID: {
+                    value = BaseInfoContextHolder.getSystemInfo().getUserId().toString();
+                    break;
+                }
+                case CREATED_HOST_IP:
+                case UPDATE_HOST_IP: {
+                    value = BaseInfoContextHolder.getSystemInfo().getUserIp();
+                    break;
+                }
+            }
+
+            //找到当前系统字段在配置表中的信息
+            Optional<TemplateGridConfDO> optionalTemplateGridConfDO = templateGridConfDOS.stream().filter(k ->
+                    k.getFieldKey().equals(column) && k.getGridTableName().equals(gridTableName)).findFirst();
+            if (optionalTemplateGridConfDO.isPresent()) {
+                //添加从表系统字段数据
+                TemplateGridDataDO dataDO = new TemplateGridDataDO();
+                dataDO.setRowId(subRowId);
+                dataDO.setFormRowId(rowId);
+                dataDO.setEnterpriseId(optionalTemplateGridConfDO.get().getEnterpriseId());
+                dataDO.setProjectId(optionalTemplateGridConfDO.get().getProjectId());
+                dataDO.setSubjectId(subjectId);
+                dataDO.setTemplateId(optionalTemplateGridConfDO.get().getId());
+                dataDO.setFormTableId(optionalTemplateGridConfDO.get().getFormTableId());
+                dataDO.setGridTableId(optionalTemplateGridConfDO.get().getGridTableId());
+                dataDO.setGridTableName(optionalTemplateGridConfDO.get().getGridTableName());
+                dataDO.setFieldAlias(optionalTemplateGridConfDO.get().getFieldAlias());
+                dataDO.setFieldKey(optionalTemplateGridConfDO.get().getFieldKey());
+                dataDO.setFieldName(column);
+                dataDO.setFieldType(optionalTemplateGridConfDO.get().getFieldType());
+                dataDO.setFieldTextValue(value);
+                dataDO.setFieldHashValue(HashUtil.mixHash(value));
+                dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+                templateGridDataDOS.add(dataDO);
+            }
+        }
     }
 
     /**
@@ -379,8 +385,8 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
 
         QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
         queryFormWrapper
-                .ge("status", 1)
-                .ge("subject_id", subjectId);
+                .eq("status", 1)
+                .eq("subject_id", subjectId);
         List<TemplateFormDataDO> formDataDOS = iTemplateFormDataService.list(queryFormWrapper);
 
         if (formDataDOS != null && formDataDOS.size() > 0) {
@@ -393,8 +399,8 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
 
         QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
         queryGridWrapper
-                .ge("status", 1)
-                .ge("subject_id", subjectId);
+                .eq("status", 1)
+                .eq("subject_id", subjectId);
         List<TemplateGridDataDO> gridDataDOS = iTemplateGridDataService.list(queryGridWrapper);
 
         if (gridDataDOS != null && gridDataDOS.size() > 0) {
@@ -409,16 +415,13 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
             log.info("-->从表行数：{}", JSONObject.toJSONString(gridCounts));
         }
 
-
         try {
             List<List<Object>> formList = RowConvertColUtil.doConvert(formDataDOS, "fieldKey", "enterpriseId", "fieldTextValue", true);
-
             for (List<Object> list : formList) {
                 log.info("主表（行转列）当前行数据:{}", list.toString());
             }
 
             List<List<Object>> gridList = RowConvertColUtil.doConvert(gridDataDOS, "fieldKey", "enterpriseId", "fieldTextValue", true);
-
             for (List<Object> list : gridList) {
                 log.info("从表（行转列）当前行数据:{}", list.toString());
             }
@@ -426,14 +429,12 @@ public class AmisFormDataSeviceImpl extends ServiceTransactionDefinition impleme
             log.error("-->行转列异常, 异常信息:,{}", exception.getMessage());
         }
 
-
         List<FormDataInfoModel> result = new ArrayList<>();
 
         for (TemplateFormDataDO formDataDO : formDataDOS) {
             List<GridDataInfoModel> gridDataInfoModels = new ArrayList<>();
             List<TemplateGridDataDO> currentGridDatas = gridDataDOS.stream().filter(o -> o.getFormRowId().equals(formDataDO.getRowId())).collect(Collectors.toList());
             if (currentGridDatas != null && currentGridDatas.size() > 0) {
-
                 for (TemplateGridDataDO currentGridDataDO : currentGridDatas) {
                     GridDataInfoModel gridDataInfoModel = new GridDataInfoModel();
                     BeanCopier gridBeanCopier = BeanCopier.create(TemplateGridDataDO.class, GridDataInfoModel.class, false);

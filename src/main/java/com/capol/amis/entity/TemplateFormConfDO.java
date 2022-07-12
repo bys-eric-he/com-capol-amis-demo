@@ -63,7 +63,17 @@ public class TemplateFormConfDO extends BaseInfo {
     private String fieldType;
 
     /**
+     * 字段长度
+     */
+    private Integer fieldLength;
+
+    /**
      * 字段顺序
      */
     private Integer fieldOrder;
+
+    /**
+     * 组件类型
+     */
+    private String componentType;
 }

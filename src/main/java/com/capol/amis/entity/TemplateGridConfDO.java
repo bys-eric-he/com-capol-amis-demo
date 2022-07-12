@@ -72,4 +72,14 @@ public class TemplateGridConfDO extends BaseInfo {
      */
     private Integer fieldOrder;
 
+    /**
+     * 字段长度
+     */
+    private Integer fieldLength;
+
+    /**
+     * 组件类型
+     */
+    private String componentType;
+
 }
