@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * 业务主题列表数据
  */
@@ -48,10 +50,22 @@ public class GridDataInfoModel extends BaseModel {
     private Long subjectId;
 
     /**
-     * 表名称
+     * 主表ID
      */
-    @ApiModelProperty(value = "表名称")
-    private String tableName;
+    @ApiModelProperty(value = "主表ID")
+    private Long formTableId;
+
+    /**
+     * 从表ID
+     */
+    @ApiModelProperty(value = "从表ID")
+    private Long gridTableId;
+
+    /**
+     * 从表名称
+     */
+    @ApiModelProperty(value = "从表名称")
+    private String gridTableName;
 
     /**
      * 字段标识

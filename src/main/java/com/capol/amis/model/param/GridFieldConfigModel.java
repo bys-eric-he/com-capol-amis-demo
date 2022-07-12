@@ -5,19 +5,32 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotNull;
+
 /**
  * 业务主题列表配置信息
  */
 @ApiModel(value = "业务主题列表字段信息")
 @Data
 public class GridFieldConfigModel {
+
+    @ApiModelProperty(value = "主键ID")
+    private Long id;
+
     @ApiModelProperty(value = "业务主题ID")
     @NotNull(message = "业务主题ID不能为空!")
     private Long subjectId;
 
-    @ApiModelProperty(value = "列表名称")
-    @NotNull(message = "列表名称不能为空!")
-    private String tableName;
+    @ApiModelProperty(value = "主表ID")
+    @NotNull(message = "主表ID不能为空!")
+    private Long formTableId;
+
+    @ApiModelProperty(value = "从表ID")
+    @NotNull(message = "从表ID不能为空!")
+    private Long gridTableId;
+
+    @ApiModelProperty(value = "从表名称")
+    @NotNull(message = "从表名称不能为空!")
+    private String gridTableName;
 
     @ApiModelProperty(value = "字段名注释")
     @NotNull(message = "字段名注释不能为空!")
@@ -42,6 +55,10 @@ public class GridFieldConfigModel {
     @ApiModelProperty(value = "字段是否允许为空")
     @NotNull(message = "字段是否允许为空不能为空!")
     private Integer fieldNull;
+
+    @ApiModelProperty(value = "字段顺序")
+    @NotNull(message = "字段顺序不能为空!")
+    private Integer fieldOrder;
 
     @ApiModelProperty(value = "组件类型")
     @NotNull(message = "组件类型不能为空!")

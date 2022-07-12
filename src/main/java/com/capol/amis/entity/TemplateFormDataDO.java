@@ -37,6 +37,16 @@ public class TemplateFormDataDO extends BaseInfo {
     private Long projectId;
 
     /**
+     * 数据表ID
+     */
+    private Long tableId;
+
+    /**
+     * 数据表名称
+     */
+    private String tableName;
+
+    /**
      * 业务主题ID
      */
     private Long subjectId;

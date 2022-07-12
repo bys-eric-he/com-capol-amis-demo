@@ -8,12 +8,16 @@
         <result column="enterprise_id" property="enterpriseId" />
         <result column="project_id" property="projectId" />
         <result column="subject_id" property="subjectId" />
-        <result column="table_name" property="tableName" />
+        <result column="form_table_id" property="formTableId" />
+        <result column="grid_table_id" property="gridTableId" />
+        <result column="grid_table_name" property="gridTableName" />
         <result column="field_key" property="fieldKey" />
         <result column="field_alias" property="fieldAlias" />
         <result column="field_name" property="fieldName" />
         <result column="field_type" property="fieldType" />
+        <result column="field_length" property="fieldLength" />
         <result column="field_order" property="fieldOrder" />
+        <result column="component_type" property="componentType" />
         <result column="status" property="status" />
         <result column="creator" property="creator" />
         <result column="creator_id" property="creatorId" />
@@ -31,12 +35,16 @@
         `enterprise_id`,
         `project_id`,
         `subject_id`,
-        `table_name`,
+        `form_table_id`,
+        `grid_table_id`,
+        `grid_table_name`,
         `field_key`,
         `field_alias`,
         `field_name`,
         `field_type`,
+        `field_length`,
         `field_order`,
+        `component_type`,
         `status`,
         `creator`,
         `creator_id`,
@@ -54,12 +62,16 @@
             `enterprise_id`,
             `project_id`,
             `subject_id`,
-            `table_name`,
+            `form_table_id`,
+            `grid_table_id`,
+            `grid_table_name`,
             `field_key`,
             `field_alias`,
             `field_name`,
             `field_type`,
+            `field_length`,
             `field_order`,
+            `component_type`,
             `status`,
             `creator`,
             `creator_id`,

@@ -9,6 +9,9 @@
         <result column="form_row_id" property="formRowId" />
         <result column="template_id" property="templateId" />
         <result column="enterprise_id" property="enterpriseId" />
+        <result column="form_table_id" property="formTableId" />
+        <result column="grid_table_id" property="gridTableId" />
+        <result column="grid_table_name" property="gridTableName" />
         <result column="project_id" property="projectId" />
         <result column="subject_id" property="subjectId" />
         <result column="table_name" property="tableName" />
@@ -40,7 +43,9 @@
         `enterprise_id`,
         `project_id`,
         `subject_id`,
-        `table_name`,
+        `form_table_id`,
+        `grid_table_id`,
+        `grid_table_name`,
         `feild_key`,
         `field_alias`,
         `field_name`,
@@ -68,7 +73,9 @@
             `enterprise_id`,
             `project_id`,
             `subject_id`,
-            `table_name`,
+            `form_table_id`,
+            `grid_table_id`,
+            `grid_table_name`,
             `feild_key`,
             `field_alias`,
             `field_name`,

@@ -12,10 +12,20 @@ import javax.validation.constraints.NotNull;
 @ApiModel(value = "业务主题表单字段信息")
 @Data
 public class FormFieldConfigModel {
+    @ApiModelProperty(value = "主键ID")
+    private Long id;
 
     @ApiModelProperty(value = "业务主题ID")
     @NotNull(message = "业务主题ID不能为空!")
     private Long subjectId;
+
+    @ApiModelProperty(value = "数据表ID")
+    @NotNull(message = "数据表ID不能为空!")
+    private Long tableId;
+
+    @ApiModelProperty(value = "列表名称")
+    @NotNull(message = "列表名称不能为空!")
+    private String tableName;
 
     @ApiModelProperty(value = "字段名注释")
     @NotNull(message = "字段名注释不能为空!")

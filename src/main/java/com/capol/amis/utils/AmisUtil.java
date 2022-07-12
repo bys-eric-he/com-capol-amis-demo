@@ -3,7 +3,10 @@ package com.capol.amis.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.capol.amis.entity.TemplateFormConfDO;
+import com.capol.amis.enums.ComponentFieldEnum;
 import com.capol.amis.enums.ComponentTypeEnum;
+import com.capol.amis.model.param.FormFieldConfigModel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -11,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 public class AmisUtil {
@@ -21,11 +25,14 @@ public class AmisUtil {
     public static final String FORM = "form";
     public static final String PAGE = "page";
 
+    public static final String TITLE ="title";
+
     public static final String TABS = "tabs";
     public static final String GRID = "grid";
 
     public static final String COLUMNS = "columns";
     public static final String NAME = "name";
+    public static final String LABEL = "label";
 
     public static final String PICKER = "picker";
     public static final String TREE_SELECT = "tree-select";
@@ -98,6 +105,7 @@ public class AmisUtil {
 
         if (CollectionUtils.isEmpty(formBody)) {
             //表单内容为空，不继续解析创建表
+            log.warn("--------------表单内容为空，不继续解析创建表------------------");
             return;
         }
 
