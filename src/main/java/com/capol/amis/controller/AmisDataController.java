@@ -57,6 +57,25 @@ public class AmisDataController {
     }
 
     /**
+     * 更新AMIS表单数据信息
+     *
+     * @param subjectDataModel
+     * @return
+     */
+    @RepeatSubmit
+    @ApiOperation("更新AMIS表单数据信息")
+    @ApiResponses({@ApiResponse(code = 400, message = "请求失败!"), @ApiResponse(code = 200, message = "请求成功!"),})
+    @PostMapping("/updateData")
+    public CommonResult<String> updateData(@RequestBody @Validated BusinessSubjectDataModel subjectDataModel, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            return CommonResult.failed(ResultCode.PARAM_IS_INVALID);
+        }
+        log.info(JSONObject.toJSONString(subjectDataModel));
+        String result = iAmisFormDataSevice.updateData(subjectDataModel);
+        return CommonResult.success(result, "更新AMIS表单数据信息成功, 处理服务端口：" + serverPort);
+    }
+
+    /**
      * 查询表单数据(主表+从表,行转列)
      *
      * @param subjectId

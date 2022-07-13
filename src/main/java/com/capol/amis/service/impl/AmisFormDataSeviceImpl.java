@@ -6,10 +6,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.capol.amis.entity.TemplateFormConfDO;
-import com.capol.amis.entity.TemplateFormDataDO;
-import com.capol.amis.entity.TemplateGridConfDO;
-import com.capol.amis.entity.TemplateGridDataDO;
+import com.capol.amis.entity.*;
 import com.capol.amis.enums.SystemFieldEnum;
 import com.capol.amis.model.param.BusinessSubjectDataModel;
 import com.capol.amis.model.result.FormDataInfoModel;
@@ -26,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -75,7 +73,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
      * @param businessSubjectDataModel
      * @return
      */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @Override
     public String insertData(BusinessSubjectDataModel businessSubjectDataModel) {
         //super.start();
@@ -88,6 +86,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                 throw new Exception("表单字段配置表中暂无该业务主题的相关配置！");
             }
 
+            // 根据业务主题ID获取列表配置信息
             List<TemplateGridConfDO> templateGridConfDOS = iTemplateGridConfService.getFieldsBySubjectId(businessSubjectDataModel.getSubjectId());
             if (CollectionUtils.isEmpty(templateGridConfDOS)) {
                 log.warn("------业务主题：{} 从表没有配置信息!", businessSubjectDataModel.getSubjectId());
@@ -195,7 +194,6 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                 }
             }
 
-
             if (templateFormDataDOS.size() > 0) {
                 iTemplateFormDataService.saveBatch(templateFormDataDOS);
                 log.info("保存业务主题表单数据完成!!!");
@@ -213,6 +211,115 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             return "****保存业务主题表单数据失败!!****";
         }
         return "保存业务主题表单数据成功!!";
+    }
+
+    /**
+     * 更新表单数据
+     *
+     * @param businessSubjectDataModel
+     * @return
+     */
+    @Override
+    public String updateData(BusinessSubjectDataModel businessSubjectDataModel) {
+        try {
+            if (businessSubjectDataModel.getRowId() == null || businessSubjectDataModel.getRowId() == 0L) {
+                throw new Exception("传入的数据行ID不允许为空！");
+            }
+            if (businessSubjectDataModel.getSubjectId() == null || businessSubjectDataModel.getSubjectId() == 0L) {
+                throw new Exception("传入的业务主题ID不允许为空！");
+            }
+            QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
+            queryFormWrapper
+                    .eq("status", 1)
+                    .eq("subject_id", businessSubjectDataModel.getSubjectId())
+                    .eq("row_id", businessSubjectDataModel.getRowId());
+
+            //主表修改之前的数据
+            List<TemplateFormDataDO> templateFormDataDOS = iTemplateFormDataService.list(queryFormWrapper);
+            if (templateFormDataDOS == null || templateFormDataDOS.size() == 0) {
+                throw new Exception("传入的数据行ID或业务主题ID无效！");
+            }
+
+            QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
+            queryGridWrapper
+                    .eq("status", 1)
+                    .eq("subject_id", businessSubjectDataModel.getSubjectId())
+                    .eq("form_row_id", businessSubjectDataModel.getRowId());
+
+            List<TemplateGridDataDO> templateGridDataDOS = iTemplateGridDataService.list(queryGridWrapper);
+            if (templateGridDataDOS == null || templateGridDataDOS.size() == 0) {
+                log.warn("------业务主题：{} 没有从表数据信息!", businessSubjectDataModel.getSubjectId());
+            }
+
+            // 根据业务主题ID获取表单配置信息
+            List<TemplateFormConfDO> templateFormConfDOS = iTemplateFormConfService.getFieldsBySubjectId(businessSubjectDataModel.getSubjectId());
+            if (CollectionUtils.isEmpty(templateFormConfDOS)) {
+                throw new Exception("表单字段配置表中暂无该业务主题的相关配置！");
+            }
+
+            // 根据业务主题ID获取列表配置信息
+            List<TemplateGridConfDO> templateGridConfDOS = iTemplateGridConfService.getFieldsBySubjectId(businessSubjectDataModel.getSubjectId());
+            if (CollectionUtils.isEmpty(templateGridConfDOS)) {
+                log.warn("------业务主题：{} 没有从表配置信息!", businessSubjectDataModel.getSubjectId());
+            }
+
+            JSONObject jsonObject = JSON.parseObject(businessSubjectDataModel.getDataJson());
+
+            if (null == jsonObject) {
+                throw new Exception("JSON解析失败！");
+            }
+
+            //主表数据
+            List<TemplateFormDataDO> updateTemplateFormDataDOS = new ArrayList<>();
+
+            //从表数据
+            List<TemplateGridDataDO> updateTemplateGridDataDOS = new ArrayList<>();
+
+            //遍历传入的JSON数据
+            for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
+                String fieldKey = entry.getKey();
+                Object dataValue = entry.getValue();
+                if (!(dataValue instanceof JSONArray)) {
+                    //遍历主表业务主题字段
+                    for (TemplateFormDataDO dataDO : templateFormDataDOS) {
+                        if (dataDO.getFieldKey().equals(fieldKey)) {
+                            //更新业务字段数据
+                            String value = dataValue.toString();
+                            dataDO.setFieldTextValue(value);
+                            dataDO.setFieldHashValue(HashUtil.mixHash(value));
+                            dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+                            updateTemplateFormDataDOS.add(dataDO);
+                        }
+                    }
+                } else if (fieldKey.startsWith("table_") && dataValue instanceof JSONArray) {
+                    log.info("-->解析列表(table)数据, 表名：{}", fieldKey);
+                    String tableName = fieldKey;
+                    //如果是表格则将值转换成数组
+                    JSONArray gridValues = (JSONArray) dataValue;
+                    //遍历从表业务主题字段
+                    for (Object obj : gridValues) {
+                        log.info("-->列表数据： {}", JSONObject.toJSONString(obj));
+                        JSONObject gridObject = (JSONObject) obj;
+                        log.info("---------这里需要调整前端传入的数据结构，需要将列表数据的form_row_id和row_id传过来，才能作更新，否则不知道要更新哪些行的数据。---------");
+                    }
+                }
+            }
+
+            if (updateTemplateFormDataDOS.size() > 0) {
+                iTemplateFormDataService.updateBatchById(updateTemplateFormDataDOS);
+                log.info("更新业务主题表单数据完成!!!");
+            }
+
+            if (updateTemplateGridDataDOS.size() > 0) {
+                //iTemplateGridDataService.updateBatchById(updateTemplateGridDataDOS);
+                log.info("保存业务主题列表数据完成!!!");
+            }
+
+        } catch (Exception exception) {
+
+        }
+
+        return null;
     }
 
     /**

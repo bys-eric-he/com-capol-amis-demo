@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
@@ -64,7 +65,7 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      * @param subjectFormModel
      * @return
      */
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @Override
     public String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel) {
         boolean isExist = false;
