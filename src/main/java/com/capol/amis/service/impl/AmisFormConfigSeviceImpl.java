@@ -656,7 +656,6 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
                 }
             }
         }
-
     }
 
     /**

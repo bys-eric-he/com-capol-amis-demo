@@ -219,6 +219,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
      * @param businessSubjectDataModel
      * @return
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @Override
     public String updateData(BusinessSubjectDataModel businessSubjectDataModel) {
         try {
@@ -272,8 +273,14 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             //主表数据
             List<TemplateFormDataDO> updateTemplateFormDataDOS = new ArrayList<>();
 
-            //从表数据
+            //从表修改数据
             List<TemplateGridDataDO> updateTemplateGridDataDOS = new ArrayList<>();
+
+            //从表删除数据
+            List<TemplateGridDataDO> deleteTemplateGridDataDOS = new ArrayList<>();
+
+            //从表新增数据
+            List<TemplateGridDataDO> addTemplateGridDataDOS = new ArrayList<>();
 
             //遍历传入的JSON数据
             for (Map.Entry<String, Object> entry : jsonObject.entrySet()) {
@@ -296,30 +303,115 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                     String tableName = fieldKey;
                     //如果是表格则将值转换成数组
                     JSONArray gridValues = (JSONArray) dataValue;
+                    Long rowId = 0L;
                     //遍历从表业务主题字段
                     for (Object obj : gridValues) {
                         log.info("-->列表数据： {}", JSONObject.toJSONString(obj));
                         JSONObject gridObject = (JSONObject) obj;
-                        log.info("---------这里需要调整前端传入的数据结构，需要将列表数据的form_row_id和row_id传过来，才能作更新，否则不知道要更新哪些行的数据。---------");
+                        rowId = gridObject.getString("rowId") != null ? Long.parseLong(gridObject.getString("rowId")) : 0L;
+                        log.info("---------这里需要调整前端传入的数据结构，需要将列表数据的row_id、列名(field_key)传过来，才能作更新，否则不知道要更新哪些行、哪些列的数据。---------");
+                        //从表数据行ID
+                        Long subRowId = snowflakeUtil.nextId();
+                        //遍历传入的JSON数据
+                        for (Map.Entry<String, Object> grid : gridObject.entrySet()) {
+                            String gridKey = grid.getKey();
+                            Object gridValue = grid.getValue();
+                            //如果当前行没有rowID或rowID等于0L，说明是新增加的数据行。
+                            if (rowId == 0L) {
+                                //遍历业务主题列表字段
+                                for (TemplateGridConfDO confDO : templateGridConfDOS) {
+                                    if (confDO.getFieldKey().equals(gridKey)) {
+                                        TemplateGridDataDO dataDO = new TemplateGridDataDO();
+                                        String column = confDO.getFieldName();
+                                        String value = gridValue.toString();
+                                        dataDO.setRowId(subRowId);
+                                        dataDO.setFormRowId(businessSubjectDataModel.getRowId());
+                                        dataDO.setEnterpriseId(confDO.getEnterpriseId());
+                                        dataDO.setProjectId(confDO.getProjectId());
+                                        dataDO.setSubjectId(confDO.getSubjectId());
+                                        dataDO.setTemplateId(confDO.getId());
+                                        dataDO.setFormTableId(confDO.getFormTableId());
+                                        dataDO.setGridTableId(confDO.getGridTableId());
+                                        dataDO.setGridTableName(tableName);
+                                        dataDO.setFieldAlias(confDO.getFieldAlias());
+                                        dataDO.setFieldKey(confDO.getFieldKey());
+                                        dataDO.setFieldName(column);
+                                        dataDO.setFieldType(confDO.getFieldType());
+                                        dataDO.setFieldTextValue(value);
+                                        dataDO.setFieldHashValue(HashUtil.mixHash(value));
+                                        dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+                                        addTemplateGridDataDOS.add(dataDO);
+                                    }
+                                }
+                            }else {
+                                if (gridKey.equals("rowId") && !rowId.equals(Long.parseLong(gridValue.toString()))) {
+                                    rowId = Long.parseLong(gridValue.toString());
+                                    continue;
+                                }
+                                //遍历业务主题列表字段
+                                for (TemplateGridDataDO dataDO : templateGridDataDOS) {
+                                    if (dataDO.getFieldKey().equals(gridKey) && dataDO.getRowId().equals(rowId)) {
+                                        //更新业务字段值
+                                        String value = gridValue.toString();
+                                        dataDO.setFieldTextValue(value);
+                                        dataDO.setFieldHashValue(HashUtil.mixHash(value));
+                                        dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+                                        updateTemplateGridDataDOS.add(dataDO);
+                                    }
+                                }
+                            }
+                        }
                     }
+                }
+            }
+
+            //解析出已经删除的列表数据
+            templateGridDataDOS.forEach(item -> {
+                if (!updateTemplateGridDataDOS.stream().map(TemplateGridDataDO::getRowId).collect(Collectors.toList()).contains(item.getRowId())) {
+                    //将数据状态设置为0-删除
+                    item.setStatus(0);
+                    deleteTemplateGridDataDOS.add(item);
+                }
+            });
+
+            Map<String, List<Long>> gridDataDOMaps = addTemplateGridDataDOS.stream().collect(Collectors.groupingBy(TemplateGridDataDO::getGridTableName, Collectors.mapping(TemplateGridDataDO::getRowId, Collectors.toList())));
+
+            //从表系统字段值构建(将数据字段的表名和行号取出)
+            for (Map.Entry<String, List<Long>> entry : gridDataDOMaps.entrySet()) {
+                String gridTableName = entry.getKey();
+                List<Long> gridRowIds = entry.getValue().stream().distinct().collect(Collectors.toList());
+                for (Long gridRowId : gridRowIds) {
+                    buildGridSystemDataFields(businessSubjectDataModel.getSubjectId(), businessSubjectDataModel.getRowId(), gridRowId, gridTableName, addTemplateGridDataDOS, templateGridConfDOS);
                 }
             }
 
             if (updateTemplateFormDataDOS.size() > 0) {
                 iTemplateFormDataService.updateBatchById(updateTemplateFormDataDOS);
-                log.info("更新业务主题表单数据完成!!!");
+                log.info("更新业务主题【表单数据】完成!!!");
             }
 
             if (updateTemplateGridDataDOS.size() > 0) {
-                //iTemplateGridDataService.updateBatchById(updateTemplateGridDataDOS);
-                log.info("保存业务主题列表数据完成!!!");
+                iTemplateGridDataService.updateBatchById(updateTemplateGridDataDOS);
+                log.info("更新业务主题【列表数据】完成!!!");
+            }
+
+            if (addTemplateGridDataDOS.size() > 0) {
+                iTemplateGridDataService.saveBatch(addTemplateGridDataDOS);
+                log.info("插入新增业务主题【列表数据】完成!!!");
+            }
+
+            if (deleteTemplateGridDataDOS.size() > 0) {
+                iTemplateGridDataService.updateBatchById(deleteTemplateGridDataDOS);
+                log.info("删除业务主题【列表数据】完成!!!");
             }
 
         } catch (Exception exception) {
-
+            log.error("更新业务主题表单数据异常! 异常原因:" + exception.getMessage());
+            log.error("异常详细信息：" + exception);
+            return "****更新业务主题表单数据失败!!****";
         }
 
-        return null;
+        return "更新数据完成！！！";
     }
 
     /**
