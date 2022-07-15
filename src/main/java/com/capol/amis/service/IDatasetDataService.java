@@ -19,4 +19,5 @@ public interface IDatasetDataService {
     List<Map<String, Object>> getUnionJoinDatas(DatasetUnionBO datasetUnion);
 
 
+    List<Map<String, Object>> getUnionJoinDatas2(DatasetUnionBO datasetUnion);
 }

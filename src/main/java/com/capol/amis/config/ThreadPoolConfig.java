@@ -17,7 +17,6 @@ public class ThreadPoolConfig {
 
     @Bean(name = "datasetServiceExecutor")
     public Executor datasetServiceExecutor() {
-        // ThreadFactory threadFactory = new ThreadFactoryBuilder().setNamePrefix("datasetServiceExecutor-").build();
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("datasetServiceExecutor-%s").build();
         return new ThreadPoolExecutor(3,
                 6,

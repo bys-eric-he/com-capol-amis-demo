@@ -2,6 +2,7 @@ package com.capol.amis.entity.bo;
 
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * @author Yaxi.Zhang
@@ -9,6 +10,7 @@ import lombok.Data;
  * desc: 数据集字段关联关系
  */
 @Data
+@Accessors(chain = true)
 public class DatasetUnionFieldBO {
     /** 左表字段 */
     private String leftFieldName;

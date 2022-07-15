@@ -20,9 +20,7 @@ public class AmisFormDataSeviceTests extends AmisApplicationTests {
     @Test
     public void testGetDetail() {
         Map<String, Object> detail = amisFormDataSevice.getDetail(1745662207332353L, 326295511084564480L);
-        detail.forEach((key, value) -> {
-            log.info("{} >++++++++++++++++++++< {}", key, value);
-        });
+        detail.forEach((key, value) -> log.info("{} >++++++++++++++++++++< {}", key, value));
     }
 
 

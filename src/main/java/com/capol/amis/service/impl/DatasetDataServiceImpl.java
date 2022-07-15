@@ -1,25 +1,22 @@
 package com.capol.amis.service.impl;
 
-import com.capol.amis.entity.TemplateFormDataDO;
-import com.capol.amis.entity.bo.DatasetRightUnionBO;
-import com.capol.amis.entity.bo.DatasetTableBasicBO;
-import com.capol.amis.entity.bo.DatasetUnionBO;
-import com.capol.amis.entity.bo.DatasetUnionFieldBO;
+import com.capol.amis.entity.bo.*;
+import com.capol.amis.enums.TableFieldTypeEnum;
+import com.capol.amis.enums.TableRelationTypeEnum;
 import com.capol.amis.mapper.TemplateFormDataMapper;
 import com.capol.amis.service.IDatasetDataService;
 import com.capol.amis.service.ITemplateFormDataService;
+import com.capol.amis.service.ITemplateGridDataService;
 import com.capol.amis.utils.CapolListUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +35,9 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
     private ITemplateFormDataService templateFormDataService;
 
     @Autowired
+    private ITemplateGridDataService templateGridDataService;
+
+    @Autowired
     @Qualifier(value = "datasetServiceExecutor")
     private Executor datasetServiceExecutor;
 
@@ -46,13 +46,18 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
         // 依次获取关联
         DatasetTableBasicBO leftTable = datasetUnion.getLeftTable();
         Long leftTableId = leftTable.getTableId();
-        Set<DatasetRightUnionBO> rightUnions = datasetUnion.getRightUnions();
+        List<DatasetRightUnionBO> rightUnions = datasetUnion.getRightUnions();
         // 查询字段
         Map<Long, Set<String>> queryFieldsMap = datasetUnion.getDatasetQueryFields();
 
         // ============================================ 获取左表详细信息 ============================================
         // map(rowId, map(fieldName, data))
-        Map<Long, Map<String, Optional<TemplateFormDataDO>>> leftData = templateFormDataService.queryClassifiedFromDataByTableId(leftTableId);
+        // 左表是主表数据
+        Map<Long, Map<String, Optional<TemplateDataBO>>> leftData = templateFormDataService.queryClassifiedFormDataByTableId(leftTableId);
+
+        if (MapUtils.isEmpty(leftData)) {
+            return new ArrayList<>();
+        }
 
         Set<String> leftQueryFields = queryFieldsMap.get(leftTableId);
         Map<Long, Map<String, Object>> leftQueryDatas = new ConcurrentHashMap<>();
@@ -61,7 +66,11 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
         List<CompletableFuture<Void>> cfs = new CopyOnWriteArrayList<>();
 
         // ============================================ 获取左侧数据数据 ============================================
-        cfs.add(CompletableFuture.runAsync(() -> getLeftDatas(leftData, leftQueryFields, leftQueryDatas), datasetServiceExecutor));
+        cfs.add(CompletableFuture.runAsync(() -> {
+            getLeftDatas(leftData, leftQueryFields, leftQueryDatas);
+        }, datasetServiceExecutor));
+        //getLeftDatas(leftData, leftQueryFields, leftQueryDatas);
+        //System.out.println(leftQueryDatas);
 
         // ============================================ 获取连接数据 ============================================
         // 可能有多个连接 -> list(map(左表rowid, list(map(右表字段, 右表数据))))
@@ -72,6 +81,7 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
                 .stream()
                 .map(union -> CompletableFuture.runAsync(() -> {
                     DatasetTableBasicBO rightTable = union.getRightTable();
+                    TableRelationTypeEnum rightTableType = rightTable.getTableType();
                     Set<DatasetUnionFieldBO> unionFields = union.getUnionFields();
                     // 左右表连接字段, 目前只有一个字段, 后续可拓展
                     Map<String, String> unionMap = new HashMap<>(1);
@@ -86,7 +96,18 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
                     // 右表查询字段
                     Set<String> rightQueryFields = queryFieldsMap.get(rightTableId);
                     // 右表数据
-                    Map<Long, Map<String, Optional<TemplateFormDataDO>>> rightData = templateFormDataService.queryClassifiedFromDataByTableId(rightTableId);
+                    // TODO zyx 表格类型
+                    // Map<Long, Map<String, Optional<TemplateFormDataDO>>> rightData = templateFormDataService.queryClassifiedFromDataByTableId(rightTableId);
+                    Map<Long, Map<String, Optional<TemplateDataBO>>> rightData;
+                    switch (rightTableType) {
+                        case MAIN_TYPE:
+                        default:
+                            rightData = templateFormDataService.queryClassifiedFormDataByTableId(rightTableId);
+                            break;
+                        case SUB_TYPE:
+                            rightData = templateGridDataService.queryClassifiedGridDataByTableId(rightTableId);
+                            break;
+                    }
                     // 获取连接数据
                     unionedDataList.add(getUnionDatas(leftData, rightData, leftFields, unionMap, rightQueryFields));
                 }, datasetServiceExecutor))
@@ -95,6 +116,78 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
 
         // ============================================ 拼接左右数据 ============================================
         CompletableFuture.allOf(cfs.toArray(new CompletableFuture[0])).join();
+        return joinUnionData(leftQueryDatas, unionedDataList);
+    }
+
+    @Override
+    public List<Map<String, Object>> getUnionJoinDatas2(DatasetUnionBO datasetUnion) {
+        // 依次获取关联
+        DatasetTableBasicBO leftTable = datasetUnion.getLeftTable();
+        Long leftTableId = leftTable.getTableId();
+        List<DatasetRightUnionBO> rightUnions = datasetUnion.getRightUnions();
+        // 查询字段
+        Map<Long, Set<String>> queryFieldsMap = datasetUnion.getDatasetQueryFields();
+
+        // ============================================ 获取左表详细信息 ============================================
+        // map(rowId, map(fieldName, data))
+        // 左表是主表数据
+        Map<Long, Map<String, Optional<TemplateDataBO>>> leftData = templateFormDataService.queryClassifiedFormDataByTableId(leftTableId);
+
+        if (MapUtils.isEmpty(leftData)) {
+            return new ArrayList<>();
+        }
+
+        Set<String> leftQueryFields = queryFieldsMap.get(leftTableId);
+        Map<Long, Map<String, Object>> leftQueryDatas = new ConcurrentHashMap<>();
+
+
+        List<CompletableFuture<Void>> cfs = new CopyOnWriteArrayList<>();
+
+        // ============================================ 获取左侧数据数据 ============================================
+        getLeftDatas(leftData, leftQueryFields, leftQueryDatas);
+        //getLeftDatas(leftData, leftQueryFields, leftQueryDatas);
+        //System.out.println(leftQueryDatas);
+
+        // ============================================ 获取连接数据 ============================================
+        // 可能有多个连接 -> list(map(左表rowid, list(map(右表字段, 右表数据))))
+        List<Map<Long, List<Map<String, Object>>>> unionedDataList = new CopyOnWriteArrayList<>();
+
+        // 并行获取右侧连接数据
+        rightUnions
+                .forEach(union ->  {
+                    DatasetTableBasicBO rightTable = union.getRightTable();
+                    TableRelationTypeEnum rightTableType = rightTable.getTableType();
+                    Set<DatasetUnionFieldBO> unionFields = union.getUnionFields();
+                    // 左右表连接字段, 目前只有一个字段, 后续可拓展
+                    Map<String, String> unionMap = new HashMap<>(1);
+                    unionFields.forEach(unionField -> {
+                        String leftFieldName = unionField.getLeftFieldName();
+                        String rightFieldName = unionField.getRightFieldName();
+                        unionMap.put(leftFieldName, rightFieldName);
+                    });
+                    Set<String> leftFields = unionMap.keySet();
+                    // 右表名
+                    Long rightTableId = rightTable.getTableId();
+                    // 右表查询字段
+                    Set<String> rightQueryFields = queryFieldsMap.get(rightTableId);
+                    // 右表数据
+                    // TODO zyx 表格类型
+                    // Map<Long, Map<String, Optional<TemplateFormDataDO>>> rightData = templateFormDataService.queryClassifiedFromDataByTableId(rightTableId);
+                    Map<Long, Map<String, Optional<TemplateDataBO>>> rightData;
+                    switch (rightTableType) {
+                        case MAIN_TYPE:
+                        default:
+                            rightData = templateFormDataService.queryClassifiedFormDataByTableId(rightTableId);
+                            break;
+                        case SUB_TYPE:
+                            rightData = templateGridDataService.queryClassifiedGridDataByTableId(rightTableId);
+                            break;
+                    }
+                    // 获取连接数据
+                    unionedDataList.add(getUnionDatas(leftData, rightData, leftFields, unionMap, rightQueryFields));
+                });
+
+        // ============================================ 拼接左右数据 ============================================
         return joinUnionData(leftQueryDatas, unionedDataList);
     }
 
@@ -121,8 +214,8 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
                 for (Map<String, Object> rightMap : rightMapList) {
                     // 不要直接操作 rightMap, 否则会
                     Map<String, Object> rightMapData = new HashMap<>(rightMap);
-                    rightMapData.putAll(rightMap);
-                    rightMapList.add(rightMapData);
+                    rightMapData.putAll(leftDataMap);
+                    resultListMap.add(rightMapData);
                 }
             } else {
                 // 没有右侧数据匹配
@@ -134,9 +227,15 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
 
     /**
      * 获取关联数据
+     * @param leftData 左表数据
+     * @param rightData 右表数据
+     * @param leftFields 左表字段
+     * @param unionMap 关联字段
+     * @param rightQueryFields 右表查询字段
+     * @return 关联后的数据 map(左表id, list(右表关联数据))
      */
-    private Map<Long, List<Map<String, Object>>> getUnionDatas(Map<Long, Map<String, Optional<TemplateFormDataDO>>> leftData,
-                                                               Map<Long, Map<String, Optional<TemplateFormDataDO>>> rightData,
+    private Map<Long, List<Map<String, Object>>> getUnionDatas(Map<Long, Map<String, Optional<TemplateDataBO>>> leftData,
+                                                               Map<Long, Map<String, Optional<TemplateDataBO>>> rightData,
                                                                Set<String> leftFields,
                                                                Map<String, String> unionMap,
                                                                Set<String> rightQueryFields) {
@@ -148,12 +247,17 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
             int matched = 0;
             for (String leftField : leftFields) {
                 String rightField = unionMap.get(leftField);
-                Optional<TemplateFormDataDO> leftFieldData = leftFieldDataMap.get(leftField);
-                Optional<TemplateFormDataDO> rightFieldData = rightFieldDataMap.get(rightField);
-                if (leftFieldData.isPresent() && rightFieldData.isPresent()) {
-                    if (Objects.equals(leftFieldData.get().getFieldHashValue(), rightFieldData.get().getFieldHashValue())) {
-                        matched++;
+                Optional<TemplateDataBO> leftFieldData = leftFieldDataMap.get(leftField);
+                Optional<TemplateDataBO> rightFieldData = rightFieldDataMap.get(rightField);
+                if (!Objects.isNull(leftFieldData) && !Objects.isNull(rightFieldData)) {
+                    if (leftFieldData.isPresent() && rightFieldData.isPresent()) {
+                        // FIXME zyx 小概率发生哈希碰撞
+                        if (Objects.equals(leftFieldData.get().getFieldHashValue(), rightFieldData.get().getFieldHashValue())) {
+                            matched++;
+                        }
                     }
+                } else {
+                    log.warn("左表{}行{}字段或者右表{}行{}字段不存在,请检查参数正确性", leftRowId, leftField, rightRowId, rightField);
                 }
             }
             // 所有匹配字段的hash值相等时, 添加数据
@@ -164,9 +268,26 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
                 }
                 Map<String, Object> dataMap = new HashMap<>();
                 for (String rightQueryField : rightQueryFields) {
-                    Optional<TemplateFormDataDO> formData = rightFieldDataMap.get(rightQueryField);
+                    Optional<TemplateDataBO> formData = rightFieldDataMap.get(rightQueryField);
                     // TODO zyx 依据数据类型添加数据
-                    formData.ifPresent(templateFormDataDO -> dataMap.put(rightQueryField, templateFormDataDO.getFieldStringValue()));
+                    formData.ifPresent(formDataDO -> {
+                        Object fieldValue;
+                        // switch (formDataDO.getFieldType())
+                        TableFieldTypeEnum fieldTypeType = TableFieldTypeEnum.getFieldTypeEnumByDesc(formDataDO.getFieldType());
+                        switch (fieldTypeType) {
+                            case BIGINT:
+                            case TINYINT:
+                                // fieldValue = formDataDO.getFieldNumberValue();
+                                // break;
+                            case VARCHAR:
+                            case DATETIME:
+                            case TEXT:
+                            default:
+                                fieldValue = formDataDO.getFieldTextValue();
+                                break;
+                        }
+                        dataMap.put(rightQueryField, fieldValue);
+                    });
                 }
                 dataList.add(dataMap);
                 unionDatas.put(leftRowId, dataList);
@@ -176,19 +297,22 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
     }
 
     /**
-     * 获取左表数据
+     * 获取左表所需字段的数据
      */
-    private void getLeftDatas(Map<Long, Map<String, Optional<TemplateFormDataDO>>> leftData,
+    private void getLeftDatas(Map<Long, Map<String, Optional<TemplateDataBO>>> leftData,
                               Set<String> leftQueryFields,
                               Map<Long, Map<String, Object>> leftQueryDatas) {
         leftData.forEach((rowId, leftFieldDataMap) -> {
             Map<String, Object> leftQueryDataMap = new HashMap<>();
             for (String leftQueryField : leftQueryFields) {
-                Optional<TemplateFormDataDO> leftFormData = leftFieldDataMap.get(leftQueryField);
-                leftFormData.ifPresent(formDataDO -> leftQueryDataMap.put(leftQueryField, formDataDO.getFieldStringValue()));
+                Optional<TemplateDataBO> leftFormData = leftFieldDataMap.get(leftQueryField);
+                if (!Objects.isNull(leftFormData)) {
+                    leftFormData.ifPresent(formDataDO -> leftQueryDataMap.put(leftQueryField, formDataDO.getFieldTextValue()));
+                } else {
+                    log.error("数据表中{}行无{}字段字段不存在,请检查参数正确性", rowId, leftQueryField);
+                }
             }
             leftQueryDatas.put(rowId, leftQueryDataMap);
         });
     }
-
 }

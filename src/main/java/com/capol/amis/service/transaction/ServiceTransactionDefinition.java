@@ -14,13 +14,13 @@ public class ServiceTransactionDefinition {
     /**
      * 事务管理器
      */
-    //@Autowired
+    @Autowired
     private PlatformTransactionManager platformTransactionManager;
 
     /**
      * 事务的一些基础信息，如超时时间、隔离级别、传播属性等
      */
-    //@Autowired
+    @Autowired
     private TransactionDefinition transactionDefinition;
 
     /**
