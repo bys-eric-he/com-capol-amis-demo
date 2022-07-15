@@ -17,10 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -76,6 +73,22 @@ public class AmisDataController {
     }
 
     /**
+     * 删除AMIS表单数据信息
+     *
+     * @param subjectId
+     * @param rowId
+     * @return
+     */
+    @RepeatSubmit
+    @ApiOperation("删除AMIS表单数据信息")
+    @ApiResponses({@ApiResponse(code = 400, message = "请求失败!"), @ApiResponse(code = 200, message = "请求成功!"),})
+    @DeleteMapping("/deleteData/{subjectId}/{rowId}")
+    public CommonResult<String> deleteData(@RequestParam Long subjectId, @RequestParam Long rowId) {
+        String result = iAmisFormDataSevice.deleteData(subjectId, rowId);
+        return CommonResult.success(result, "删除AMIS表单数据信息成功, 处理服务端口：" + serverPort);
+    }
+
+    /**
      * 查询表单数据(主表+从表,行转列)
      *
      * @param subjectId
@@ -83,7 +96,7 @@ public class AmisDataController {
      */
     @ApiOperation("查询表单数据(主表+从表,行转列)")
     @ApiResponses({@ApiResponse(code = 400, message = "请求失败!"), @ApiResponse(code = 200, message = "请求成功!"),})
-    @PostMapping("/queryDataList")
+    @GetMapping("/queryDataList")
     public CommonResult<List<FormDataInfoModel>> queryFormDataList(Long subjectId) {
         List<FormDataInfoModel> result = iAmisFormDataSevice.queryFormDataList(subjectId);
         return CommonResult.success(result, "查询AMIS表单数据(主表+从表)成功, 处理服务端口：" + serverPort);
@@ -97,12 +110,11 @@ public class AmisDataController {
      */
     @ApiOperation("查询表单数据(行转列-仅主表数据)")
     @ApiResponses({@ApiResponse(code = 400, message = "请求失败!"), @ApiResponse(code = 200, message = "请求成功!"),})
-    @PostMapping("/queryDataMaps")
+    @GetMapping("/queryDataMaps")
     public CommonResult<DynamicDataVO> queryFormDataMaps(Long subjectId) {
         DynamicDataVO result = iAmisFormDataSevice.queryFormDataMaps(subjectId);
         return CommonResult.success(result, "查询表单数据(行转列-仅主表数据)成功, 处理服务端口：" + serverPort);
     }
-
 
     /**
      * 查询指定表单数据明细(包括从表数据)
@@ -113,7 +125,7 @@ public class AmisDataController {
      */
     @ApiOperation("查询指定表单数据明细(包括从表数据)")
     @ApiResponses({@ApiResponse(code = 400, message = "请求失败!"), @ApiResponse(code = 200, message = "请求成功!"),})
-    @PostMapping("/getDetail")
+    @GetMapping("/getDetail")
     public CommonResult<Map<String, Object>> getDetail(Long subjectId, Long rowId) {
         Map<String, Object> result = iAmisFormDataSevice.getDetail(subjectId, rowId);
         return CommonResult.success(result, "查询指定表单数据明细(包括从表数据)成功, 处理服务端口：" + serverPort);

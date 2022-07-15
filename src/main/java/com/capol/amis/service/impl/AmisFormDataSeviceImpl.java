@@ -230,10 +230,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                 throw new Exception("传入的业务主题ID不允许为空！");
             }
             QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
-            queryFormWrapper
-                    .eq("status", 1)
-                    .eq("subject_id", businessSubjectDataModel.getSubjectId())
-                    .eq("row_id", businessSubjectDataModel.getRowId());
+            queryFormWrapper.eq("status", 1).eq("subject_id", businessSubjectDataModel.getSubjectId()).eq("row_id", businessSubjectDataModel.getRowId());
 
             //主表修改之前的数据
             List<TemplateFormDataDO> templateFormDataDOS = iTemplateFormDataService.list(queryFormWrapper);
@@ -242,10 +239,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             }
 
             QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
-            queryGridWrapper
-                    .eq("status", 1)
-                    .eq("subject_id", businessSubjectDataModel.getSubjectId())
-                    .eq("form_row_id", businessSubjectDataModel.getRowId());
+            queryGridWrapper.eq("status", 1).eq("subject_id", businessSubjectDataModel.getSubjectId()).eq("form_row_id", businessSubjectDataModel.getRowId());
 
             List<TemplateGridDataDO> templateGridDataDOS = iTemplateGridDataService.list(queryGridWrapper);
             if (templateGridDataDOS == null || templateGridDataDOS.size() == 0) {
@@ -343,7 +337,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                                         addTemplateGridDataDOS.add(dataDO);
                                     }
                                 }
-                            }else {
+                            } else {
                                 if (gridKey.equals("rowId") && !rowId.equals(Long.parseLong(gridValue.toString()))) {
                                     rowId = Long.parseLong(gridValue.toString());
                                     continue;
@@ -415,6 +409,58 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
     }
 
     /**
+     * 根据数据行号删除数据
+     *
+     * @param subjectId
+     * @param rowId
+     * @return
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    @Override
+    public String deleteData(Long subjectId, Long rowId) {
+        try {
+            if (rowId == null || rowId == 0L) {
+                throw new Exception("传入的数据行ID不允许为空！");
+            }
+            if (subjectId == null || subjectId == 0L) {
+                throw new Exception("传入的业务主题ID不允许为空！");
+            }
+            QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
+            queryFormWrapper.eq("status", 1).eq("subject_id", subjectId).eq("row_id", rowId);
+
+            //主表修改之前的数据
+            List<TemplateFormDataDO> templateFormDataDOS = iTemplateFormDataService.list(queryFormWrapper);
+            if (templateFormDataDOS == null || templateFormDataDOS.size() == 0) {
+                throw new Exception("传入的数据行ID或业务主题ID无对应的数据记录！");
+            }
+
+            QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
+            queryGridWrapper.eq("status", 1).eq("subject_id", subjectId).eq("form_row_id", rowId);
+
+            List<TemplateGridDataDO> templateGridDataDOS = iTemplateGridDataService.list(queryGridWrapper);
+            if (templateGridDataDOS == null || templateGridDataDOS.size() == 0) {
+                log.warn("------业务主题：{}, 主表数据行：{}, 没有从表数据信息!", subjectId, rowId);
+            }
+
+            //1. 先删除从表数据
+            templateFormDataDOS.forEach(item -> item.setStatus(0));
+            iTemplateFormDataService.updateBatchById(templateFormDataDOS);
+            log.info("----删除主表数据完成, 影响数据：{} 行!!!---", templateFormDataDOS.size());
+
+            //2. 再删除主表数据
+            templateGridDataDOS.forEach(item -> item.setStatus(0));
+            iTemplateGridDataService.updateBatchById(templateGridDataDOS);
+            log.info("----删除从表数据完成, 影响数据：{} 行!!!---", templateGridDataDOS.size());
+        } catch (Exception exception) {
+            log.error("删除业务主题表单数据异常! 异常原因:" + exception.getMessage());
+            log.error("异常详细信息：" + exception);
+            return "****删除业务主题表单数据失败!!****";
+        }
+
+        return null;
+    }
+
+    /**
      * 构建主表系统字段
      *
      * @param subjectId
@@ -422,8 +468,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
      * @param templateFormDataDOS
      * @param templateFormConfDOS
      */
-    private void buildFormSystemDataFields(Long subjectId, Long rowId, List<TemplateFormDataDO> templateFormDataDOS,
-                                           List<TemplateFormConfDO> templateFormConfDOS) {
+    private void buildFormSystemDataFields(Long subjectId, Long rowId, List<TemplateFormDataDO> templateFormDataDOS, List<TemplateFormConfDO> templateFormConfDOS) {
         String[] columns = {"id", "status"};
         //添加系统字段数据
         for (SystemFieldEnum systemFieldEnum : getSystemFieldEnum()) {
@@ -492,8 +537,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
      * @param templateGridDataDOS
      * @param templateGridConfDOS
      */
-    private void buildGridSystemDataFields(Long subjectId, Long rowId, Long subRowId, String gridTableName, List<TemplateGridDataDO> templateGridDataDOS,
-                                           List<TemplateGridConfDO> templateGridConfDOS) {
+    private void buildGridSystemDataFields(Long subjectId, Long rowId, Long subRowId, String gridTableName, List<TemplateGridDataDO> templateGridDataDOS, List<TemplateGridConfDO> templateGridConfDOS) {
         String[] columns = {"id", "status"};
         //添加系统字段数据
         for (SystemFieldEnum systemFieldEnum : getSystemFieldEnum()) {
@@ -529,8 +573,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             }
 
             //找到当前系统字段在配置表中的信息
-            Optional<TemplateGridConfDO> optionalTemplateGridConfDO = templateGridConfDOS.stream().filter(k ->
-                    k.getFieldKey().equals(column) && k.getGridTableName().equals(gridTableName)).findFirst();
+            Optional<TemplateGridConfDO> optionalTemplateGridConfDO = templateGridConfDOS.stream().filter(k -> k.getFieldKey().equals(column) && k.getGridTableName().equals(gridTableName)).findFirst();
             if (optionalTemplateGridConfDO.isPresent()) {
                 //添加从表系统字段数据
                 TemplateGridDataDO dataDO = new TemplateGridDataDO();
@@ -585,9 +628,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
         int gridTables = 0;
 
         QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
-        queryFormWrapper
-                .eq("status", 1)
-                .eq("subject_id", subjectId);
+        queryFormWrapper.eq("status", 1).eq("subject_id", subjectId);
         List<TemplateFormDataDO> formDataDOS = iTemplateFormDataService.list(queryFormWrapper);
 
         if (formDataDOS != null && formDataDOS.size() > 0) {
@@ -599,9 +640,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
         }
 
         QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
-        queryGridWrapper
-                .eq("status", 1)
-                .eq("subject_id", subjectId);
+        queryGridWrapper.eq("status", 1).eq("subject_id", subjectId);
         List<TemplateGridDataDO> gridDataDOS = iTemplateGridDataService.list(queryGridWrapper);
 
         if (gridDataDOS != null && gridDataDOS.size() > 0) {
@@ -680,8 +719,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             header.setFieldName(confDO.getFieldName());
             header.setFieldType(confDO.getFieldType());
             header.setFieldOrder(confDO.getFieldOrder());
-            header.setTableName("t_template_form_data_"
-                    .concat(String.valueOf(BaseInfoContextHolder.getEnterpriseAndProjectInfo().getEnterpriseId())));
+            header.setTableName("t_template_form_data_".concat(String.valueOf(BaseInfoContextHolder.getEnterpriseAndProjectInfo().getEnterpriseId())));
 
             fieldsVOS.add(header);
         }
@@ -691,9 +729,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
         int gridTables = 0;
 
         QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
-        queryFormWrapper
-                .eq("status", 1)
-                .eq("subject_id", subjectId);
+        queryFormWrapper.eq("status", 1).eq("subject_id", subjectId);
         List<Map<String, Object>> formDataDOS = iTemplateFormDataService.listMaps(queryFormWrapper);
 
         if (CollectionUtils.isNotEmpty(formDataDOS)) {
@@ -704,10 +740,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             log.info("-->主表行数：{}", formCounts);
 
             QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
-            queryGridWrapper
-                    .eq("status", 1)
-                    .eq("subject_id", subjectId)
-                    .eq("form_row_id", formDataDOS.get(0).get("rowId"));
+            queryGridWrapper.eq("status", 1).eq("subject_id", subjectId).eq("form_row_id", formDataDOS.get(0).get("rowId"));
             List<Map<String, Object>> gridDataDOS = iTemplateGridDataService.listMaps(queryGridWrapper);
 
             if (CollectionUtils.isNotEmpty(gridDataDOS)) {
@@ -744,10 +777,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
 
         Map<String, Object> result = new HashMap<>();
         QueryWrapper<TemplateFormDataDO> queryFormWrapper = new QueryWrapper<>();
-        queryFormWrapper
-                .eq("status", 1)
-                .eq("subject_id", subjectId)
-                .eq("row_id", rowId);
+        queryFormWrapper.eq("status", 1).eq("subject_id", subjectId).eq("row_id", rowId);
 
         //查询主表记录
         List<Map<String, Object>> formDataDOS = iTemplateFormDataService.listMaps(queryFormWrapper);
@@ -758,14 +788,11 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             log.info("-->主表数据：{}", JSONObject.toJSONString(formDataDOS));
             log.info("-->主表行数：{}", formCounts);
 
-            result.putAll(formDataDOS.get(0));
+            result.put("form_table",formDataDOS);
 
 
             QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();
-            queryGridWrapper
-                    .eq("status", 1)
-                    .eq("subject_id", subjectId)
-                    .eq("form_row_id", formDataDOS.get(0).get("rowId"));
+            queryGridWrapper.eq("status", 1).eq("subject_id", subjectId).eq("form_row_id", formDataDOS.get(0).get("rowId"));
             //查询从表数据
             List<Map<String, Object>> gridDataDOS = iTemplateGridDataService.listMaps(queryGridWrapper);
 
@@ -780,7 +807,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                 log.info("-->从表数量：{}", JSONObject.toJSONString(gridTables));
                 log.info("-->从表行数：{}", JSONObject.toJSONString(gridCounts));
 
-                result.put("table_rows", gridDataDOS);
+                result.put("grid_table", gridDataDOS);
             }
         }
         return result;
