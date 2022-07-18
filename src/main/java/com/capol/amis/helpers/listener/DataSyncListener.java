@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.capol.amis.entity.bo.DatasetUnionBO;
 import com.capol.amis.service.IDatasetDataService;
 import com.rabbitmq.client.Channel;
+import javafx.scene.shape.HLineTo;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit;
  * desc: 监听数据同步消息
  */
 @Component
+@Slf4j
 public class DataSyncListener {
 
     @Autowired

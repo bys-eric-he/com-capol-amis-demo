@@ -315,4 +315,11 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
             leftQueryDatas.put(rowId, leftQueryDataMap);
         });
     }
+
+    /**
+     * 获取连接字段
+     */
+    public void getUnionFields() {
+
+    }
 }

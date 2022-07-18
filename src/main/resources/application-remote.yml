@@ -90,3 +90,19 @@ spring:
       routing-key: capol-amis-demo
     publisher-confirm-type: correlated # exchange可达
     publisher-returns: true # queue可达
+
+xxl:
+  job:
+    admin:
+      addresses: http://127.0.0.1:8080/xxl-job-admin
+      username: admin
+      password: 123456
+    accessToken: default_token
+    executor:
+      appname: xxl-job-executor-sample
+      address:
+      ip:
+      port: 9999
+      logpath: /data/applogs/xxl-job/jobhandler
+      logretentiondays: 30
+      jobGroup: 1

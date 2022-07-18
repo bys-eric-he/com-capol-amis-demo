@@ -3,6 +3,7 @@ package com.capol.amis.common;
 import com.capol.amis.entity.bo.FormDataBasicVO;
 import com.capol.amis.utils.CapolListUtil;
 import org.junit.jupiter.api.Test;
+import org.springframework.util.DigestUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -139,8 +140,12 @@ public class CommonTests {
         }
     }
 
-
-
+    @Test
+    public void testMD5() {
+        String pwd = "123456";
+        String pwdMD5 = DigestUtils.md5DigestAsHex(pwd.getBytes());
+        System.out.println(pwdMD5);
+    }
 
 
 }

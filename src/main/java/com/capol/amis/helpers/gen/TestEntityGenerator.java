@@ -1,4 +1,4 @@
-package com.capol.amis.testutils;
+package com.capol.amis.helpers.gen;
 
 import com.capol.amis.entity.bo.DatasetRightUnionBO;
 import com.capol.amis.entity.bo.DatasetTableBasicBO;
@@ -12,9 +12,11 @@ import java.util.stream.Stream;
 
 /**
  * @author Yaxi.Zhang
- * @since 2022/7/15 16:05
+ * @since 2022/7/18 09:31
+ * desc: 测试类实体生成
  */
-public class TestEntityUtils {
+public class TestEntityGenerator {
+
     public static DatasetUnionBO getDatasetUnion() {
         // 左表
         DatasetTableBasicBO leftTable = new DatasetTableBasicBO()
