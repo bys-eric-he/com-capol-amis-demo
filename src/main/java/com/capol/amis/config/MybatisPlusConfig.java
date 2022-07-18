@@ -22,7 +22,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -33,32 +32,33 @@ import java.util.Map;
 /**
  * 配置加载表名处理器
  */
-@EnableTransactionManagement // 开启事务
 @Configuration
+@EnableTransactionManagement
 @MapperScan(basePackages = "com.capol.amis.mapper", sqlSessionFactoryRef = "datasourceSqlSessionFactory")
 @Slf4j
 public class MybatisPlusConfig {
-    /*@Bean(name = "datasource")
+    /*
+    @Bean(name = "datasource")
     @ConfigurationProperties(prefix = "spring.datasource")
     public DataSource druidDataSource() {
         DruidDataSource druidDataSource = DruidDataSourceBuilder.create().build();
         return druidDataSource;
-    }*/
+    }
 
-    /*@Bean(name = "qcDatasource")
+    @Bean(name = "qcDatasource")
     @Primary
     @ConfigurationProperties(prefix = "spring.datasource.dynamic.datasource.master")
     public DataSource qcDatasource() {
         DruidDataSource druidDataSource = DruidDataSourceBuilder.create().build();
         return druidDataSource;
-    }*/
+    }
 
-    /*@Bean(name = "datasourceTransactionManager")
+    @Bean(name = "datasourceTransactionManager")
     public DataSourceTransactionManager masterTransactionManager(@Qualifier(value = "datasource") DataSource dataSource) {
         return new DataSourceTransactionManager(dataSource);
-    }*/
+    }
 
-    /*@Bean(name = "datasourceSqlSessionFactory")
+    @Bean(name = "datasourceSqlSessionFactory")
     @ConfigurationPropertiesBinding()
     public SqlSessionFactory sqlSessionFactory(@Qualifier(value = "qcDatasource") DataSource dataSource) throws Exception {
         MybatisSqlSessionFactoryBean factoryBean = new MybatisSqlSessionFactoryBean();
@@ -70,7 +70,15 @@ public class MybatisPlusConfig {
         //配置打印SQL语句
         factoryBean.setConfiguration(printSQLConfig());
         return factoryBean.getObject();
-    }*/
+    }
+
+    public MybatisConfiguration printSQLConfig() {
+        MybatisConfiguration config = new MybatisConfiguration();
+        config.setLogImpl(StdOutImpl.class);
+
+        return config;
+    }
+    */
 
     @Bean(name = "amisDemo")
     @ConfigurationProperties(prefix = "spring.datasource.druid.amis-demo")
@@ -104,7 +112,7 @@ public class MybatisPlusConfig {
     @Bean("datasourceSqlSessionFactory")
     @ConfigurationPropertiesBinding()
     public SqlSessionFactory sqlSessionFactory() throws Exception {
-        /*MybatisSqlSessionFactoryBean sqlSessionFactory = new MybatisSqlSessionFactoryBean();
+        MybatisSqlSessionFactoryBean sqlSessionFactory = new MybatisSqlSessionFactoryBean();
         sqlSessionFactory.setDataSource(multipleDataSource(amisDemo(), qaBiz()));
         // 设置默认需要扫描的 xml 文件
         sqlSessionFactory.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath*:mapper/*.xml"));
@@ -112,7 +120,7 @@ public class MybatisPlusConfig {
         MybatisConfiguration configuration = new MybatisConfiguration();
         configuration.setJdbcTypeForNull(JdbcType.NULL);
         // 驼峰和下划线转换
-        // configuration.setMapUnderscoreToCamelCase(true);
+        configuration.setMapUnderscoreToCamelCase(true);
         configuration.setCacheEnabled(false);
         configuration.setCallSettersOnNulls(true);
         // 打印SQL语句
@@ -125,23 +133,18 @@ public class MybatisPlusConfig {
         sqlSessionFactory.setPlugins(mybatisPlusInterceptor());
         // 实现自动填充功能
         // sqlSessionFactory.setGlobalConfig(printSQLConfig());
-        return sqlSessionFactory.getObject();*/
-        MybatisSqlSessionFactoryBean factoryBean = new MybatisSqlSessionFactoryBean();
-        //factoryBean.setDataSource(dataSource);
-        factoryBean.setDataSource(multipleDataSource(amisDemo(), qaBiz()));
-        factoryBean.setMapperLocations(new PathMatchingResourcePatternResolver()
-                .getResources("classpath:mapper/*.xml"));
-        //加载分表插件
-        factoryBean.setPlugins(mybatisPlusInterceptor());
-        //配置打印SQL语句
-        factoryBean.setConfiguration(printSQLConfig());
-        return factoryBean.getObject();
+        return sqlSessionFactory.getObject();
     }
 
+    /**
+     * 动态事务配置
+     *
+     * @param dataSource
+     * @return
+     */
     @Bean(name = "multipleTransactionManager")
     @Primary
     public DataSourceTransactionManager multipleTransactionManager(@Qualifier("multipleDataSource") DataSource dataSource) {
-        // 动态事务配置
         return new DataSourceTransactionManager(dataSource);
     }
 
@@ -163,25 +166,5 @@ public class MybatisPlusConfig {
         dynamicTableNameInnerInterceptor.setTableNameHandlerMap(handlerMap);
         interceptor.addInnerInterceptor(dynamicTableNameInnerInterceptor);
         return interceptor;
-    }
-
-    @Bean(name = "amisDemoJdbcTemplate")
-    public JdbcTemplate amisDemoJdbcTemplate(@Qualifier("amisDemo") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    @Bean(name = "qaBizJdbcTemplate")
-    public JdbcTemplate qaBizJdbcTemplate(@Qualifier("qaBiz") DataSource dataSource) {
-        return new JdbcTemplate(dataSource);
-    }
-
-    /**
-     * 打印SQL语句
-     */
-    public MybatisConfiguration printSQLConfig() {
-        MybatisConfiguration config = new MybatisConfiguration();
-        config.setLogImpl(StdOutImpl.class);
-
-        return config;
     }
 }
