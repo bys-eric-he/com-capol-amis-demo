@@ -8,6 +8,9 @@ import com.capol.amis.entity.TemplateGridConfDO;
 import com.capol.amis.entity.base.BaseInfo;
 import com.capol.amis.enums.ComponentFieldEnum;
 import com.capol.amis.enums.SystemFieldEnum;
+import com.capol.amis.enums.TableRelationTypeEnum;
+import com.capol.amis.mapper.TemplateFormConfMapper;
+import com.capol.amis.mapper.TemplateGridConfMapper;
 import com.capol.amis.model.param.BusinessSubjectFormModel;
 import com.capol.amis.model.param.FormFieldConfigModel;
 import com.capol.amis.model.param.GridFieldConfigModel;
@@ -15,7 +18,6 @@ import com.capol.amis.service.IAmisFormConfigSevice;
 import com.capol.amis.service.IBusinessSubjectService;
 import com.capol.amis.service.ITemplateFormConfService;
 import com.capol.amis.service.ITemplateGridConfService;
-import com.capol.amis.service.transaction.ServiceTransactionDefinition;
 import com.capol.amis.utils.AmisUtil;
 import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.SnowflakeUtil;
@@ -57,6 +59,12 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      */
     @Autowired
     private ITemplateGridConfService iTemplateGridConfService;
+
+    @Autowired
+    private TemplateFormConfMapper templateFormConfMapper;
+
+    @Autowired
+    private TemplateGridConfMapper templateGridConfMapper;
 
 
     /**
@@ -120,6 +128,17 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
         }
 
         return "保存表单字段配置信息成功！";
+    }
+
+    /**
+     * 获取表ID与表类型关系
+     */
+    @Override
+    public Map<Long, TableRelationTypeEnum> getTableRelationType() {
+        Map<Long, TableRelationTypeEnum> tableRelationTypeMap = new HashMap<>();
+        templateFormConfMapper.selectDistinctTableIds().forEach(tableId -> tableRelationTypeMap.put(tableId, TableRelationTypeEnum.MAIN_TYPE));
+        templateGridConfMapper.selectDistinctTableIds().forEach(tableId -> tableRelationTypeMap.put(tableId, TableRelationTypeEnum.SUB_TYPE));
+        return tableRelationTypeMap;
     }
 
     /**

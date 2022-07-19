@@ -12,10 +12,14 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class DatasetUnionFieldBO {
+    /** 左表配置字段id */
+    private Long leftTemplateId;
     /** 左表字段 */
     private String leftFieldName;
     /** 左表字段别名 */
     private String leftFieldNameAlias;
+    /** 右表配置字段id */
+    private Long rightTemplateId;
     /** 右表字段 */
     private String rightFieldName;
     /** 右表字段别名 */

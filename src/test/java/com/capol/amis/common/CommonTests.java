@@ -56,6 +56,25 @@ public class CommonTests {
     }
 
     @Test
+    public void testTrans3() {
+        FormDataBasicVO formData1 = new FormDataBasicVO().setRowId(1001L).setFieldName("field1").setFieldHash(1003L);
+        FormDataBasicVO formData2 = new FormDataBasicVO().setRowId(1001L).setFieldName("field2").setFieldHash(2003L);
+        FormDataBasicVO formData3 = new FormDataBasicVO().setRowId(1002L).setFieldName("field1").setFieldHash(3003L);
+        FormDataBasicVO formData4 = new FormDataBasicVO().setRowId(1002L).setFieldName("field2").setFieldHash(4003L);
+        FormDataBasicVO formData5 = new FormDataBasicVO().setRowId(1003L).setFieldName("field1").setFieldHash(5003L);
+        FormDataBasicVO formData6 = new FormDataBasicVO().setRowId(1003L).setFieldName("field2").setFieldHash(6003L);
+
+        List<FormDataBasicVO> collect = Stream.of(formData1, formData2, formData3, formData4, formData5, formData6).collect(Collectors.toList());
+
+        Map<Long, Map<Long, Set<String>>> collect1 = collect.stream()
+                .collect(Collectors.groupingBy(FormDataBasicVO::getRowId,
+                        Collectors.groupingBy(FormDataBasicVO::getFieldHash,
+                                Collectors.mapping(FormDataBasicVO::getFieldName, Collectors.toSet()))));
+
+        System.out.println(collect1);
+    }
+
+    @Test
     public void testReducing() {
         FormDataBasicVO formData1 = new FormDataBasicVO().setRowId(1001L).setFieldName("field1").setFieldHash(1003L);
         FormDataBasicVO formData2 = new FormDataBasicVO().setRowId(1001L).setFieldName("field2").setFieldHash(2003L);

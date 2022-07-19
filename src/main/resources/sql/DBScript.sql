@@ -53,7 +53,7 @@ CREATE TABLE `cfg_business_subject_324225698253233659`
     `create_time`      datetime    DEFAULT NOW() COMMENT '创建时间',
     `update_time`      datetime    DEFAULT NOW() COMMENT '更新时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="业务主题基本信息";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务主题基本信息';
 
 
 /**
@@ -84,7 +84,7 @@ CREATE TABLE `t_template_form_conf_324225698253233659`
     `create_time`      datetime     DEFAULT NOW() COMMENT '创建时间',
     `update_time`      datetime     DEFAULT NOW() COMMENT '更新时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="业务主题表单配置表";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务主题表单配置表';
 
 
 /**
@@ -116,7 +116,7 @@ CREATE TABLE `t_template_grid_conf_324225698253233659`
     `create_time`      datetime     DEFAULT NOW() COMMENT '创建时间',
     `update_time`      datetime     DEFAULT NOW() COMMENT '更新时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="业务主题列表配置表";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务主题列表配置表';
 
 
 /**
@@ -152,7 +152,7 @@ CREATE TABLE `t_template_form_data_324225698253233659`
     `create_time`        datetime     DEFAULT NOW() COMMENT '创建时间',
     `update_time`        datetime     DEFAULT NOW() COMMENT '更新时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="业务主题表单数据表";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务主题表单数据表';
 
 
 /**
@@ -190,7 +190,7 @@ CREATE TABLE `t_template_grid_data_324225698253233659`
     `create_time`        datetime     DEFAULT NOW() COMMENT '创建时间',
     `update_time`        datetime     DEFAULT NOW() COMMENT '更新时间',
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="业务主题列表数据表";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务主题列表数据表';
 
 
 /**
@@ -228,7 +228,7 @@ CREATE TABLE `t_dataset_324225698253233659`
 /**
  * 数据集字段表
  */
-DROP TABLE IF EXISTS `t_dataset_324225698253233659`;
+DROP TABLE IF EXISTS `t_dataset_field_324225698253233659`;
 
 CREATE TABLE `t_dataset_field_324225698253233659`
 (
@@ -236,6 +236,7 @@ CREATE TABLE `t_dataset_field_324225698253233659`
     `dataset_id`        bigint(20) NOT NULL COMMENT '数据集主键id',
     `subject_key`       varchar(120) NOT NULL COMMENT '业务主题key',
     `subject_id`        bigint(20) NOT NULL COMMENT '业务主题Id',
+    `table_id`          bigint(20) NOT NULL COMMENT '主题表id',
     `table_name`        varchar(100) NOT NULL COMMENT '主表名',
     `table_name_alias`  varchar(100) NOT NULL COMMENT '表别称(给报表制作使用),规则是T拼最大下标',
     `table_source_type` tinyint(1) NOT NULL COMMENT '表来源类型(1宽表;2用户自定义表)',
@@ -271,10 +272,12 @@ CREATE TABLE `t_dataset_union_324225698253233659`
     `dataset_id`              bigint(20) NOT NULL COMMENT '数据集主键id',
     `source_subject_key`      varchar(120) NOT NULL COMMENT '来源业务主题key',
     `source_subject_id`       bigint(20) NOT NULL COMMENT '来源业务主题Id',
+    `source_table_id`         bigint(20) NOT NULL COMMENT '来源表Id',
     `source_table_name`       varchar(100) NOT NULL COMMENT '来源表名',
     `source_field_id`         bigint(20) NOT NULL COMMENT '来源字段主键id',
     `target_subject_key`      varchar(120) NOT NULL COMMENT '目标业务主题key',
     `target_subject_id`       bigint(20) NOT NULL COMMENT '目标业务主题Id',
+    `target_table_id`         bigint(20) NOT NULL COMMENT '目标表id',
     `target_table_name`       varchar(100) NOT NULL COMMENT '目标表名',
     `target_field_id`         bigint(20) NOT NULL COMMENT '目标字段主键id',
     `union_type`              tinyint(1) NOT NULL COMMENT '关联类型(1左关联)',

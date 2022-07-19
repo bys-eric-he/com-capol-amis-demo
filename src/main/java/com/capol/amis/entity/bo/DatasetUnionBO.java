@@ -20,5 +20,5 @@ public class DatasetUnionBO {
     /** 右表关联关系 */
     private List<DatasetRightUnionBO> rightUnions;
     /** 查询字段(表id， 查询字段) */
-    private Map<Long, Set<String>> datasetQueryFields;
+    private Map<Long, Set<Long>> datasetQueryFields;
 }

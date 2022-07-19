@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.capol.amis.entity.TemplateGridConfDO;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.apache.ibatis.annotations.Mapper;
-import org.springframework.stereotype.Repository;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
-import org.springframework.stereotype.Repository;
+import java.util.Set;
 
 /**
  * <p>
@@ -26,5 +26,8 @@ public interface TemplateGridConfMapper extends BaseMapper<TemplateGridConfDO> {
      * @return
      */
     List<TemplateGridConfDO> getFieldsBySubjectId(@Param("subjectId") Long subjectId);
+
+    @Select("select distinct grid_table_id from t_template_grid_conf where status = 1")
+    Set<Long> selectDistinctTableIds();
 }
 

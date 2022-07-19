@@ -1,5 +1,7 @@
 package com.capol.amis.enums;
 
+import com.baomidou.mybatisplus.annotation.EnumValue;
+
 /**
  * @author Yaxi.Zhang
  * @since 2022/7/1 15:32
@@ -13,6 +15,7 @@ public enum TableRelationTypeEnum {
     SUB_TYPE("从表", 2);
 
     private final String name;
+    @EnumValue
     private final Integer value;
 
 

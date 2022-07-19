@@ -6,6 +6,8 @@ mybatis-plus:
       id-type: auto
       field-strategy: NOT_EMPTY
       db-type: MYSQL
+  # 指定mybatis-plus通用枚举扫描范围, 3.5.2后无需指定
+  typeEnumsPackage: com.capol.amis.enums
   configuration:
     map-underscore-to-camel-case: true
     call-setters-on-nulls: true

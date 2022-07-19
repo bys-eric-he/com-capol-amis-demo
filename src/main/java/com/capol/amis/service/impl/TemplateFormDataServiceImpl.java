@@ -41,14 +41,16 @@ public class TemplateFormDataServiceImpl
     }
 
     @Override
-    public Map<Long, Map<String, Optional<TemplateDataBO>>> queryClassifiedFormDataByTableId(Long tableId) {
+    public Map<Long, Map<Long, Optional<TemplateDataBO>>> queryClassifiedFormDataByTableId(Long tableId) {
         return new LambdaQueryChainWrapper<>(templateFormDataMapper)
-                .eq(TemplateFormDataDO::getTableId, tableId).list().stream()
+                .eq(TemplateFormDataDO::getTableId, tableId)
+                .eq(TemplateFormDataDO::getStatus, 1)
+                .list().stream()
                 .map(data -> {
                     TemplateDataBO templateDataBO = new TemplateDataBO();
                     BeanUtils.copyProperties(data, templateDataBO);
                     return templateDataBO;
                 }).collect(Collectors.groupingBy(TemplateDataBO::getRowId,
-                        Collectors.groupingBy(TemplateDataBO::getFieldName, Collectors.reducing((ldata, rdata) -> ldata))));
+                        Collectors.groupingBy(TemplateDataBO::getTemplateId, Collectors.reducing((ldata, rdata) -> ldata))));
     }
 }

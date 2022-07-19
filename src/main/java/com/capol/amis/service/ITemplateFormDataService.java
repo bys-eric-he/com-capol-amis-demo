@@ -25,11 +25,10 @@ public interface ITemplateFormDataService extends IService<TemplateFormDataDO> {
      */
     List<TemplateFormDataDO> queryFromDataBySubjectId(Long subjectId);
 
-
     /**
-     * 依据表ID获取分类的数据 (rowId, (fieldName, data))
+     * 依据表ID获取分类的数据 (rowId, (templateId, data))
      * @param tableId 表ID
      * @return 对应的分类数据
      */
-    Map<Long, Map<String, Optional<TemplateDataBO>>> queryClassifiedFormDataByTableId(Long tableId);
+    Map<Long, Map<Long, Optional<TemplateDataBO>>> queryClassifiedFormDataByTableId(Long tableId);
 }

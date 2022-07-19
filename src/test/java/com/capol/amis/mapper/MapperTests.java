@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Yaxi.Zhang
@@ -27,6 +28,13 @@ public class MapperTests extends AmisApplicationTests {
     @Autowired
     private BusinessSubjectMapper businessSubjectMapper;
 
+    @Autowired
+    private TemplateFormConfMapper templateFormConfMapper;
+
+    @Autowired
+    private TemplateGridConfMapper templateGridConfMapper;
+
+
     @Test
     public void testMapper() {
         List<Map<String, Object>> maps = formFieldConfigMapper.selectMaps(new QueryWrapper<>());
@@ -40,6 +48,14 @@ public class MapperTests extends AmisApplicationTests {
         System.out.println(businessSubjectDOS);*/
 
         //qaBusinessSubjectMapper.selectList(new QueryWrapper<>()).forEach(System.out::println);
+    }
+
+    @Test
+    public void testMapper1() {
+        Set<Long> templateTableIds = templateFormConfMapper.selectDistinctTableIds();
+        System.out.println("list = " + templateTableIds);
+        Set<Long> gridTableIds = templateGridConfMapper.selectDistinctTableIds();
+        System.out.println("gridTableIds = " + gridTableIds);
     }
 
 }

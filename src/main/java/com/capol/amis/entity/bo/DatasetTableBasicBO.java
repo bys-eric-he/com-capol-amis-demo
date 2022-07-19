@@ -18,7 +18,7 @@ public class DatasetTableBasicBO {
      */
     private Long tableId;
     /**
-     * 表格类型 {@link com.capol.amis.enums.TableFieldTypeEnum}
+     * 表格类型 {@link com.capol.amis.enums.TableRelationTypeEnum}
      */
     private TableRelationTypeEnum tableType;
     /**

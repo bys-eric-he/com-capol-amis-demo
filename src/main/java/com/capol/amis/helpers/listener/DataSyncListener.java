@@ -32,7 +32,7 @@ public class DataSyncListener {
     public void consume(String msg, Channel channel, Message message) throws IOException {
         // TODO zyx 同步数据到Clickhouse中
         DatasetUnionBO datasetUnionBO = JSONObject.parseObject(msg, DatasetUnionBO.class);
-        List<Map<String, Object>> unionJoinDatas = datasetDataService.getUnionJoinDatas(datasetUnionBO);
+        List<Map<Long, Object>> unionJoinDatas = datasetDataService.getUnionJoinDatas(datasetUnionBO);
         channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
     }
 

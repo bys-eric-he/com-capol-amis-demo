@@ -43,14 +43,16 @@ public class TemplateGridDataServiceImpl
     }
 
     @Override
-    public Map<Long, Map<String, Optional<TemplateDataBO>>> queryClassifiedGridDataByTableId(Long tableId) {
+    public Map<Long, Map<Long, Optional<TemplateDataBO>>> queryClassifiedGridDataByTableId(Long tableId) {
         return new LambdaQueryChainWrapper<>(templateGridDataMapper)
-                .eq(TemplateGridDataDO::getGridTableId, tableId).list().stream()
+                .eq(TemplateGridDataDO::getGridTableId, tableId)
+                .eq(TemplateGridDataDO::getStatus, 1)
+                .list().stream()
                 .map(data -> {
                     TemplateDataBO templateDataBO = new TemplateDataBO();
                     BeanUtils.copyProperties(data, templateDataBO);
                     return templateDataBO;
                 }).collect(Collectors.groupingBy(TemplateDataBO::getRowId,
-                        Collectors.groupingBy(TemplateDataBO::getFieldName, Collectors.reducing((ldata, rdata) -> ldata))));
+                        Collectors.groupingBy(TemplateDataBO::getTemplateId, Collectors.reducing((ldata, rdata) -> ldata))));
     }
 }

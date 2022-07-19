@@ -25,5 +25,5 @@ public interface ITemplateGridDataService extends IService<TemplateGridDataDO> {
      */
     List<TemplateGridDataDO> queryGridDataBySubjectId(Long subjectId);
 
-    Map<Long, Map<String, Optional<TemplateDataBO>>> queryClassifiedGridDataByTableId(Long tableId);
+    Map<Long, Map<Long, Optional<TemplateDataBO>>> queryClassifiedGridDataByTableId(Long tableId);
 }

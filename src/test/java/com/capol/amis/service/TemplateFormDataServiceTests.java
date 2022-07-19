@@ -19,7 +19,7 @@ public class TemplateFormDataServiceTests extends AmisFormDataSeviceTests {
 
     @Test
     public void testQueryClassifiedFormDataByTableId() {
-        Map<Long, Map<String, Optional<TemplateDataBO>>> resultMap = templateFormDataService.queryClassifiedFormDataByTableId(328434438381764608L);
+        Map<Long, Map<Long, Optional<TemplateDataBO>>> resultMap = templateFormDataService.queryClassifiedFormDataByTableId(328434438381764608L);
         System.out.println("JSONObject.toJSONString(resultMap) = " + JSONObject.toJSONString(resultMap));
     }
 }

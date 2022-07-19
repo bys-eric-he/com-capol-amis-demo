@@ -14,10 +14,9 @@ public interface IDatasetDataService {
     /**
      * 获取联表数据集信息
      * @param datasetUnion 连表相关信息
-     * @return 获取的信息, list中每一项表示一行, map中的key是字段名, value是字段值
+     * @return 获取的信息, list中每一项表示一行, map中的key是字段id, value是字段值
      */
-    List<Map<String, Object>> getUnionJoinDatas(DatasetUnionBO datasetUnion);
+    List<Map<Long, Object>> getUnionJoinDatas(DatasetUnionBO datasetUnion);
 
-
-    List<Map<String, Object>> getUnionJoinDatas2(DatasetUnionBO datasetUnion);
+    List<DatasetUnionBO> getUnionFields();
 }

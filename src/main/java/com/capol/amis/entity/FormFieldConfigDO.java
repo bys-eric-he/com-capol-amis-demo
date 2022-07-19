@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+
+import com.capol.amis.enums.TableRelationTypeEnum;
 import lombok.Data;
 
 /**
@@ -89,7 +91,7 @@ public class FormFieldConfigDO implements Serializable {
     /**
      * 表关系类型(1主表;2从表)
      */
-    private Integer tableRelationType;
+    private TableRelationTypeEnum tableRelationType;
 
     /**
      * 序号

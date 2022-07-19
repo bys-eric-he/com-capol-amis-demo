@@ -3,6 +3,7 @@ package com.capol.amis.entity.bo;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -16,5 +17,5 @@ public class DatasetRightUnionBO {
     /** 右表信息 */
     private DatasetTableBasicBO rightTable;
     /** 关联字段 */
-    private Set<DatasetUnionFieldBO> unionFields;
+    private List<DatasetUnionFieldBO> unionFields;
 }
