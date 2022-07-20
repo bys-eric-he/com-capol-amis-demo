@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -92,17 +93,25 @@ public class MybatisPlusConfig {
         return DruidDataSourceBuilder.create().build();
     }
 
+    @Bean(name = "report")
+    @ConfigurationProperties(prefix = "spring.datasource.druid.clickhouse")
+    public DataSource report() {
+        return DruidDataSourceBuilder.create().build();
+    }
+
     /**
      * 动态数据源配置
      */
     @Bean(name = "multipleDataSource")
     @Primary
     public DataSource multipleDataSource(@Qualifier("amisDemo") DataSource amisDemo,
-                                         @Qualifier("qaBiz") DataSource qaBiz) {
+                                         @Qualifier("qaBiz") DataSource qaBiz,
+                                         @Qualifier("report") DataSource report) {
         DynamicDataSource dynamicDataSource = new DynamicDataSource();
         Map<Object, Object> targetDataSources = new HashMap<>();
         targetDataSources.put(DBTypeEnum.AMIS_DEMO.getValue(), amisDemo);
         targetDataSources.put(DBTypeEnum.QA_BIZ.getValue(), qaBiz);
+        targetDataSources.put(DBTypeEnum.REPORT.getValue(), report);
         dynamicDataSource.setTargetDataSources(targetDataSources);
         // 程序默认数据源，根据程序调用数据源频次，把常调用的数据源作为默认
         dynamicDataSource.setDefaultTargetDataSource(amisDemo);
@@ -113,7 +122,7 @@ public class MybatisPlusConfig {
     @ConfigurationPropertiesBinding()
     public SqlSessionFactory sqlSessionFactory() throws Exception {
         MybatisSqlSessionFactoryBean sqlSessionFactory = new MybatisSqlSessionFactoryBean();
-        sqlSessionFactory.setDataSource(multipleDataSource(amisDemo(), qaBiz()));
+        sqlSessionFactory.setDataSource(multipleDataSource(amisDemo(), qaBiz(), report()));
         // 设置默认需要扫描的 xml 文件
         sqlSessionFactory.setMapperLocations(new PathMatchingResourcePatternResolver().getResources("classpath*:mapper/*.xml"));
         //其他配置项
@@ -167,4 +176,20 @@ public class MybatisPlusConfig {
         interceptor.addInnerInterceptor(dynamicTableNameInnerInterceptor);
         return interceptor;
     }
+
+    @Bean(name = "amisDemoJdbcTemplate")
+    public JdbcTemplate amisDemoJdbcTemplate(@Qualifier("amisDemo") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
+
+    @Bean(name = "qaBizJdbcTemplate")
+    public JdbcTemplate qaBizJdbcTemplate(@Qualifier("qaBiz") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
+
+    @Bean(name = "reportTemplate")
+    public JdbcTemplate reportJdbcTemplate(@Qualifier("report") DataSource dataSource) {
+        return new JdbcTemplate(dataSource);
+    }
+
 }

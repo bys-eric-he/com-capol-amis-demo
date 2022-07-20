@@ -5,8 +5,12 @@ import com.capol.amis.entity.bo.DatasetTableBasicBO;
 import com.capol.amis.entity.bo.DatasetUnionBO;
 import com.capol.amis.entity.bo.DatasetUnionFieldBO;
 import com.capol.amis.enums.TableRelationTypeEnum;
+import com.capol.amis.utils.SnowflakeUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -15,9 +19,13 @@ import java.util.stream.Stream;
  * @since 2022/7/18 09:31
  * desc: 测试类实体生成
  */
+@Component
 public class TestEntityGenerator {
 
-    public static DatasetUnionBO getDatasetUnion() {
+    @Autowired
+    private SnowflakeUtil snowflakeUtil;
+
+    public DatasetUnionBO getDatasetUnion() {
         // 左表
         DatasetTableBasicBO leftTable = new DatasetTableBasicBO()
                 .setTableId(328434438381764608L)
@@ -60,5 +68,18 @@ public class TestEntityGenerator {
         queryFiledsMap.put(328465748152287232L, rightQueryFields);
         // 查询信息
         return new DatasetUnionBO().setLeftTable(leftTable).setRightUnions(unionList).setDatasetQueryFields(queryFiledsMap);
+    }
+
+    public List<Map<String, Object>> getMapList(int n) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", String.valueOf(snowflakeUtil.nextId()));
+            map.put("age", String.valueOf(i + ThreadLocalRandom.current().nextInt(30) + 20));
+            map.put("creator", "zhangsan");
+            map.put("creator_id", String.valueOf(100000000+ThreadLocalRandom.current().nextInt(20000) + 20));
+            list.add(map);
+        }
+        return list;
     }
 }

@@ -61,6 +61,15 @@ spring:
         testWhileIdle: true
         testOnBorrow: false
         testOnReturn: false
+      clickhouse:
+        driverClassName: ru.yandex.clickhouse.ClickHouseDriver
+        url: jdbc:clickhouse://81.68.117.201:8123/db_report
+        username: root
+        password: 123321
+        initialSize: 10
+        maxActive: 100
+        minIdle: 10
+        maxWait: 6000
 
   redis:
     timeout: 50000

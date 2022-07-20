@@ -40,6 +40,7 @@
         <com.github.xiaoymin.swagger.ui.version>1.9.6</com.github.xiaoymin.swagger.ui.version>
         <guava.version>30.1.1-jre</guava.version>
         <xxl.job.version>2.3.0</xxl.job.version>
+        <clickhouse.jdbc.version>0.3.2-patch3</clickhouse.jdbc.version>
     </properties>
 
     <!--多profile-->
@@ -228,6 +229,12 @@
             <groupId>com.xuxueli</groupId>
             <artifactId>xxl-job-core</artifactId>
             <version>${xxl.job.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc -->
+        <dependency>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+            <version>${clickhouse.jdbc.version}</version>
         </dependency>
     </dependencies>
 

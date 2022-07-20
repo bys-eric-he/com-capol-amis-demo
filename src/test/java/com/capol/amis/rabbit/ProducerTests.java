@@ -21,9 +21,12 @@ public class ProducerTests extends AmisApplicationTests {
     @Autowired
     private RabbitMQProperties rabbitProperties;
 
+    @Autowired
+    private TestEntityGenerator testEntityGenerator;
+
     @Test
     public void testPublish() {
-        DatasetUnionBO datasetUnion = TestEntityGenerator.getDatasetUnion();
+        DatasetUnionBO datasetUnion = testEntityGenerator.getDatasetUnion();
         for (int i = 0; i < 30; i++) {
             rabbitTemplate.convertAndSend(rabbitProperties.getExchange(), rabbitProperties.getRoutingKey(), JSONObject.toJSONString(datasetUnion));
         }

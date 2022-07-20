@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.capol.amis.mapper.DatasetUnionMapper">
+
+    <resultMap id="BaseResultMap" type="com.capol.amis.entity.DatasetUnionDO">
+            <id property="id" column="id" jdbcType="BIGINT"/>
+            <result property="datasetId" column="dataset_id" jdbcType="BIGINT"/>
+            <result property="sourceSubjectKey" column="source_subject_key" jdbcType="VARCHAR"/>
+            <result property="sourceSubjectId" column="source_subject_id" jdbcType="BIGINT"/>
+            <result property="sourceTableId" column="source_table_id" jdbcType="BIGINT"/>
+            <result property="sourceTableName" column="source_table_name" jdbcType="VARCHAR"/>
+            <result property="sourceFieldId" column="source_field_id" jdbcType="BIGINT"/>
+            <result property="targetSubjectKey" column="target_subject_key" jdbcType="VARCHAR"/>
+            <result property="targetSubjectId" column="target_subject_id" jdbcType="BIGINT"/>
+            <result property="targetTableId" column="target_table_id" jdbcType="BIGINT"/>
+            <result property="targetTableName" column="target_table_name" jdbcType="VARCHAR"/>
+            <result property="targetFieldId" column="target_field_id" jdbcType="BIGINT"/>
+            <result property="unionType" column="union_type" jdbcType="TINYINT"/>
+            <result property="targetTableNameAlias" column="target_table_name_alias" jdbcType="VARCHAR"/>
+            <result property="orderNo" column="order_no" jdbcType="INTEGER"/>
+            <result property="status" column="status" jdbcType="TINYINT"/>
+            <result property="creator" column="creator" jdbcType="VARCHAR"/>
+            <result property="creatorId" column="creator_id" jdbcType="BIGINT"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="createdHostIp" column="created_host_ip" jdbcType="VARCHAR"/>
+            <result property="lastOperator" column="last_operator" jdbcType="VARCHAR"/>
+            <result property="lastOperatorId" column="last_operator_id" jdbcType="BIGINT"/>
+            <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+            <result property="updateHostIp" column="update_host_ip" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,dataset_id,source_subject_key,
+        source_subject_id,source_table_id,source_table_name,
+        source_field_id,target_subject_key,target_subject_id,
+        target_table_id,target_table_name,target_field_id,
+        union_type,target_table_name_alias,order_no,
+        status,creator,creator_id,
+        create_time,created_host_ip,last_operator,
+        last_operator_id,update_time,update_host_ip
+    </sql>
+</mapper>

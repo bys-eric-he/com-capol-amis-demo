@@ -21,9 +21,12 @@ public class DatasetDataServiceTests extends AmisApplicationTests {
     @Autowired
     private IDatasetDataService datasetDataService;
 
+    @Autowired
+    private TestEntityGenerator testEntityGenerator;
+
     @Test
     public void testGetUnionJoinDatas() {
-        DatasetUnionBO datasetUnionBO = TestEntityGenerator.getDatasetUnion();
+        DatasetUnionBO datasetUnionBO = testEntityGenerator.getDatasetUnion();
 
         StopWatch sw = new StopWatch();
         sw.start("task00");

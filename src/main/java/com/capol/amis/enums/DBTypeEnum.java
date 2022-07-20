@@ -6,7 +6,9 @@ package com.capol.amis.enums;
  * desc: 数据源枚举
  */
 public enum DBTypeEnum {
-    AMIS_DEMO("amisDemo"), QA_BIZ("qaBiz");
+    AMIS_DEMO("amisDemo"),
+    QA_BIZ("qaBiz"),
+    REPORT("report");
 
     private final String value;
 
