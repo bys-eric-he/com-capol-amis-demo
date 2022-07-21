@@ -2,6 +2,7 @@ package com.capol.amis.service.transaction;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -14,13 +15,13 @@ public class ServiceTransactionDefinition {
     /**
      * 事务管理器
      */
-    @Autowired
-    private PlatformTransactionManager platformTransactionManager;
+    //@Autowired
+    private DataSourceTransactionManager dataSourceTransactionManager;
 
     /**
      * 事务的一些基础信息，如超时时间、隔离级别、传播属性等
      */
-    @Autowired
+    //@Autowired
     private TransactionDefinition transactionDefinition;
 
     /**
@@ -33,7 +34,7 @@ public class ServiceTransactionDefinition {
      */
     public void start() {
         //根据事务定义TransactionDefinition，获取事务
-        transactionStatus = platformTransactionManager.getTransaction(transactionDefinition);
+        transactionStatus = dataSourceTransactionManager.getTransaction(transactionDefinition);
         log.info("--------开始事务----------");
     }
 
@@ -41,7 +42,7 @@ public class ServiceTransactionDefinition {
      * 提交事务
      */
     public void commit() {
-        platformTransactionManager.commit(transactionStatus);
+        dataSourceTransactionManager.commit(transactionStatus);
         log.info("--------提交事务----------");
     }
 
@@ -49,7 +50,7 @@ public class ServiceTransactionDefinition {
      * 回滚事务
      */
     public void rollback() {
-        platformTransactionManager.rollback(transactionStatus);
+        dataSourceTransactionManager.rollback(transactionStatus);
         log.warn("--------回滚事务----------");
     }
 }

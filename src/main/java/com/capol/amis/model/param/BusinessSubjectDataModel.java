@@ -12,6 +12,9 @@ import javax.validation.constraints.NotNull;
 @ApiModel(value = "业务主题表单数据")
 @Data
 public class BusinessSubjectDataModel {
+    @ApiModelProperty(value = "数据行ID")
+    private Long rowId;
+
     @ApiModelProperty(value = "业务主题ID")
     @NotNull(message = "业务主题ID不能为空!")
     private Long subjectId;

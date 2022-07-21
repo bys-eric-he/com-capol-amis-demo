@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.capol.amis.entity.TemplateFormConfDO;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -26,4 +28,7 @@ public interface TemplateFormConfMapper extends BaseMapper<TemplateFormConfDO> {
      * @return
      */
     List<TemplateFormConfDO> getFieldsBySubjectId(@Param("subjectId") Long subjectId);
+
+    @Select("select distinct table_id from t_template_form_conf where status = 1")
+    Set<Long> selectDistinctTableIds();
 }

@@ -2,8 +2,11 @@ package com.capol.amis.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.capol.amis.entity.TemplateGridDataDO;
+import com.capol.amis.entity.bo.TemplateDataBO;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * <p>
@@ -21,4 +24,6 @@ public interface ITemplateGridDataService extends IService<TemplateGridDataDO> {
      * @return
      */
     List<TemplateGridDataDO> queryGridDataBySubjectId(Long subjectId);
+
+    Map<Long, Map<Long, Optional<TemplateDataBO>>> queryClassifiedGridDataByTableId(Long tableId);
 }

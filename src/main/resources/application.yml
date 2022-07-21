@@ -2,8 +2,11 @@ server:
   port: 8809
 
 spring:
+#  aop:
+#    # 增强的cglib
+#    proxy-target-class: true
   profiles:
-    active: remote
+    active: @activeProfile@
 
 enterprise:
   id: 324225698253233659

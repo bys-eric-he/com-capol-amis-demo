@@ -1,13 +1,19 @@
 package com.capol.amis.service.impl;
 
+import com.baomidou.mybatisplus.extension.conditions.query.LambdaQueryChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.capol.amis.entity.TemplateGridDataDO;
+import com.capol.amis.entity.bo.TemplateDataBO;
 import com.capol.amis.mapper.TemplateGridDataMapper;
 import com.capol.amis.service.ITemplateGridDataService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -34,5 +40,19 @@ public class TemplateGridDataServiceImpl
     @Override
     public List<TemplateGridDataDO> queryGridDataBySubjectId(Long subjectId) {
         return templateGridDataMapper.queryGridDataBySubjectId(subjectId);
+    }
+
+    @Override
+    public Map<Long, Map<Long, Optional<TemplateDataBO>>> queryClassifiedGridDataByTableId(Long tableId) {
+        return new LambdaQueryChainWrapper<>(templateGridDataMapper)
+                .eq(TemplateGridDataDO::getGridTableId, tableId)
+                .eq(TemplateGridDataDO::getStatus, 1)
+                .list().stream()
+                .map(data -> {
+                    TemplateDataBO templateDataBO = new TemplateDataBO();
+                    BeanUtils.copyProperties(data, templateDataBO);
+                    return templateDataBO;
+                }).collect(Collectors.groupingBy(TemplateDataBO::getRowId,
+                        Collectors.groupingBy(TemplateDataBO::getTemplateId, Collectors.reducing((ldata, rdata) -> ldata))));
     }
 }

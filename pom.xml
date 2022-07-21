@@ -15,10 +15,16 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <mybatis.plus.version>3.4.1</mybatis.plus.version>
+        <springcloud.alibaba.version>2.1.0.RELEASE</springcloud.alibaba.version>
+        <springboot.version>2.4.5</springboot.version>
+        <springcloud.alibaba.version>2021.1</springcloud.alibaba.version>
+        <springcloud.starter.version>3.1.0</springcloud.starter.version>
         <org.springframework.boot.version>2.4.5</org.springframework.boot.version>
         <com.baomidou.version>3.4.1</com.baomidou.version>
         <druid.spring.boot.starter.version>1.1.16</druid.spring.boot.starter.version>
         <spring.boot.starter.jdbc.version>2.2.5.RELEASE</spring.boot.starter.jdbc.version>
+        <spring.boot.starter.amqp.version>2.4.5</spring.boot.starter.amqp.version>
         <org.freemarker.version>2.3.28</org.freemarker.version>
         <com.alibaba.fastjson.version>1.2.51</com.alibaba.fastjson.version>
         <org.apache.commons.lang3.version>3.12.0</org.apache.commons.lang3.version>
@@ -32,7 +38,30 @@
         <org.apache.velocity.engine.core.verison>2.0</org.apache.velocity.engine.core.verison>
         <io.springfox.boot.starter.version>3.0.0</io.springfox.boot.starter.version>
         <com.github.xiaoymin.swagger.ui.version>1.9.6</com.github.xiaoymin.swagger.ui.version>
+        <guava.version>30.1.1-jre</guava.version>
+        <xxl.job.version>2.3.0</xxl.job.version>
+        <clickhouse.jdbc.version>0.3.2-patch3</clickhouse.jdbc.version>
     </properties>
+
+    <!--多profile-->
+    <profiles>
+        <profile>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <id>remote</id>
+            <properties>
+                <activeProfile>remote</activeProfile>
+            </properties>
+        </profile>
+        <profile>
+            <id>local</id>
+            <properties>
+                <spring.profiles.active>local</spring.profiles.active>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -55,6 +84,35 @@
             <version>${org.springframework.boot.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+            <version>${springboot.version}</version>
+        </dependency>
+        <!--nacos-config-->
+        <!--<dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+            <version>${springcloud.alibaba.version}</version>
+        </dependency>-->
+        <!--nacos-discovery-->
+        <!--<dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+            <version>${springcloud.alibaba.version}</version>
+        </dependency>-->
+        <!--web + actuator-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <version>${springboot.version}</version>
+        </dependency>
+        <!--springcloud starter-->
+        <!--<dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bootstrap</artifactId>
+            <version>${springcloud.starter.version}</version>
+        </dependency>-->
+        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-boot-starter</artifactId>
             <version>${com.baomidou.version}</version>
@@ -75,6 +133,24 @@
             <version>${spring.boot.starter.jdbc.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
+            <version>${spring.boot.starter.amqp.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <version>${springboot.version}</version>
+        </dependency>
+
+        <!-- mybatis-plus 多数据源
+                添加插件时会有问题，手动配置-->
+        <!--<dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+            <version>${mybatis.plus.version}</version>
+        </dependency>-->
         <dependency>
             <groupId>org.freemarker</groupId>
             <artifactId>freemarker</artifactId>
@@ -140,5 +216,73 @@
             <artifactId>swagger-bootstrap-ui</artifactId>
             <version>${com.github.xiaoymin.swagger.ui.version}</version>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.xuxueli</groupId>
+            <artifactId>xxl-job-core</artifactId>
+            <version>${xxl.job.version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.clickhouse/clickhouse-jdbc -->
+        <dependency>
+            <groupId>com.clickhouse</groupId>
+            <artifactId>clickhouse-jdbc</artifactId>
+            <version>${clickhouse.jdbc.version}</version>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                    <!--configuration-metadata-annotation-processor-->
+                    <!--<proc>none</proc>-->
+                </configuration>
+            </plugin>
+            <!--to avoid: found character '@' that cannot start any token-->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <delimiters>
+                        <delimiter>@</delimiter>
+                    </delimiters>
+                    <useDefaultDelimiters>false</useDefaultDelimiters>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${springboot.version}</version>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+        <!--to avoid: found character '@' that cannot start any token-->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
+
 </project>

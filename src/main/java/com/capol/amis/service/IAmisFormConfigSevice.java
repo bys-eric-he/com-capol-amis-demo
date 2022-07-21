@@ -1,6 +1,9 @@
 package com.capol.amis.service;
 
+import com.capol.amis.enums.TableRelationTypeEnum;
 import com.capol.amis.model.param.BusinessSubjectFormModel;
+
+import java.util.Map;
 
 public interface IAmisFormConfigSevice {
 
@@ -11,4 +14,6 @@ public interface IAmisFormConfigSevice {
      * @return
      */
     String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel);
+
+    Map<Long, TableRelationTypeEnum> getTableRelationType();
 }

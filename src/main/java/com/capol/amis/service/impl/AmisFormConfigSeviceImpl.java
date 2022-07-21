@@ -8,6 +8,9 @@ import com.capol.amis.entity.TemplateGridConfDO;
 import com.capol.amis.entity.base.BaseInfo;
 import com.capol.amis.enums.ComponentFieldEnum;
 import com.capol.amis.enums.SystemFieldEnum;
+import com.capol.amis.enums.TableRelationTypeEnum;
+import com.capol.amis.mapper.TemplateFormConfMapper;
+import com.capol.amis.mapper.TemplateGridConfMapper;
 import com.capol.amis.model.param.BusinessSubjectFormModel;
 import com.capol.amis.model.param.FormFieldConfigModel;
 import com.capol.amis.model.param.GridFieldConfigModel;
@@ -15,7 +18,6 @@ import com.capol.amis.service.IAmisFormConfigSevice;
 import com.capol.amis.service.IBusinessSubjectService;
 import com.capol.amis.service.ITemplateFormConfService;
 import com.capol.amis.service.ITemplateGridConfService;
-import com.capol.amis.service.transaction.ServiceTransactionDefinition;
 import com.capol.amis.utils.AmisUtil;
 import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.SnowflakeUtil;
@@ -25,13 +27,15 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cglib.beans.BeanCopier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition implements IAmisFormConfigSevice {
+public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ implements IAmisFormConfigSevice {
     /**
      * 雪花算法工具类
      */
@@ -56,12 +60,20 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
     @Autowired
     private ITemplateGridConfService iTemplateGridConfService;
 
+    @Autowired
+    private TemplateFormConfMapper templateFormConfMapper;
+
+    @Autowired
+    private TemplateGridConfMapper templateGridConfMapper;
+
+
     /**
      * 保存表单字段配置信息
      *
      * @param subjectFormModel
      * @return
      */
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @Override
     public String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel) {
         boolean isExist = false;
@@ -77,7 +89,7 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
         BusinessSubjectDO businessSubjectDO = new BusinessSubjectDO();
         businessSubjectDO.setSubjectId(subjectFormModel.getSubjectId());
         if (configJson != null) {
-            String subjectName = configJson.getString(AmisUtil.TITLE);
+            String subjectName = configJson.getString("title");
             businessSubjectDO.setSubjectName(subjectName);
         } else {
             businessSubjectDO.setSubjectName("AMIS-DEMO-业务主题");
@@ -92,7 +104,7 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
         businessSubjectDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
 
         try {
-            super.start();
+            //super.start();
             if (isExist) {
                 QueryWrapper<BusinessSubjectDO> updateFormWrapper = new QueryWrapper<>();
                 updateFormWrapper
@@ -108,14 +120,25 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
             }
 
             saveHandle(enterpriseId, projectId, subjectFormModel);
-            super.commit();
+            //super.commit();
         } catch (Exception exception) {
             log.error("保存表单字段配置信息异常, 异常原因：" + exception.getMessage());
-            super.rollback();
+            //super.rollback();
             return "****保存表单字段配置信息失败！****";
         }
 
         return "保存表单字段配置信息成功！";
+    }
+
+    /**
+     * 获取表ID与表类型关系
+     */
+    @Override
+    public Map<Long, TableRelationTypeEnum> getTableRelationType() {
+        Map<Long, TableRelationTypeEnum> tableRelationTypeMap = new HashMap<>();
+        templateFormConfMapper.selectDistinctTableIds().forEach(tableId -> tableRelationTypeMap.put(tableId, TableRelationTypeEnum.MAIN_TYPE));
+        templateGridConfMapper.selectDistinctTableIds().forEach(tableId -> tableRelationTypeMap.put(tableId, TableRelationTypeEnum.SUB_TYPE));
+        return tableRelationTypeMap;
     }
 
     /**
@@ -127,6 +150,7 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
      * @return
      */
     private void saveHandle(Long enterpriseId, Long projectId, BusinessSubjectFormModel subjectFormModel) throws Exception {
+
         String configJson = subjectFormModel.getConfigJson();
         // 主表(表单)字段
         List<JSONObject> formFields = new ArrayList<>();
@@ -651,7 +675,6 @@ public class AmisFormConfigSeviceImpl extends ServiceTransactionDefinition imple
                 }
             }
         }
-
     }
 
     /**

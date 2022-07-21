@@ -18,6 +18,23 @@ public interface IAmisFormDataSevice {
     String insertData(BusinessSubjectDataModel businessSubjectDataModel);
 
     /**
+     * 更新表单数据
+     *
+     * @param businessSubjectDataModel
+     * @return
+     */
+    String updateData(BusinessSubjectDataModel businessSubjectDataModel);
+
+    /**
+     * 根据数据行号删除数据
+     *
+     * @param subjectId
+     * @param rowId
+     * @return
+     */
+    String deleteData(Long subjectId, Long rowId);
+
+    /**
      * 查询表单数据(主表+从表)
      *
      * @param subjectId
