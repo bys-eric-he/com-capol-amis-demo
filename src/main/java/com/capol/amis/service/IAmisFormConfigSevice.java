@@ -13,7 +13,7 @@ public interface IAmisFormConfigSevice {
      * @param subjectFormModel
      * @return
      */
-    String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel);
+    String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel) throws Exception;
 
     /**
      * 获取配置表中，表ID与表类型关系

@@ -44,7 +44,7 @@ public class AmisFormController {
     @ApiOperation("保存AMIS表单JSON结构信息")
     @ApiResponses({@ApiResponse(code = 400, message = "请求失败!"), @ApiResponse(code = 200, message = "请求成功!"),})
     @PostMapping("/saveBody")
-    public CommonResult<String> saveBody(@RequestBody @Validated BusinessSubjectFormModel subjectFormModel, BindingResult bindingResult) {
+    public CommonResult<String> saveBody(@RequestBody @Validated BusinessSubjectFormModel subjectFormModel, BindingResult bindingResult) throws Exception {
         if (bindingResult.hasErrors()) {
             return CommonResult.failed(ResultCode.PARAM_IS_INVALID);
         }

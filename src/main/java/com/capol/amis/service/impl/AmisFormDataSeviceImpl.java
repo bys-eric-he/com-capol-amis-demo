@@ -339,6 +339,12 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                 log.warn("------业务主题：{} 没有从表配置信息!", businessSubjectDataModel.getSubjectId());
             }
 
+            // 根据主表名称获取字典配置字段信息
+            List<CfgFormDictDO> cfgFormDictDOS = iCfgFormDictService.getDictByTableName(templateFormConfDOS.get(0).getTableName());
+            if (CollectionUtils.isEmpty(cfgFormDictDOS)) {
+                log.warn("------业务主题：{} 主表没有字典配置信息!", businessSubjectDataModel.getSubjectId());
+            }
+
             JSONObject jsonObject = JSON.parseObject(businessSubjectDataModel.getDataJson());
 
             if (null == jsonObject) {
@@ -367,7 +373,9 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                         if (dataDO.getFieldKey().equals(fieldKey)) {
                             //更新业务字段数据
                             String value = dataValue.toString();
-                            dataDO.setFieldTextValue(value);
+                            TemplateFormConfDO templateFormConfDO = templateFormConfDOS.stream()
+                                    .filter(item->item.getFieldName().equals(dataDO.getFieldName())).findFirst().get();
+                            dataDO.setFieldTextValue(setShowValue(templateFormConfDO, cfgFormDictDOS, value));
                             dataDO.setFieldHashValue(HashUtil.mixHash(value));
                             dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
                             updateTemplateFormDataDOS.add(dataDO);

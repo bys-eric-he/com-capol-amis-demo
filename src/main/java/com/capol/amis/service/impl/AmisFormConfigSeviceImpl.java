@@ -79,7 +79,7 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     @Override
-    public String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel) {
+    public String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel) throws Exception {
         boolean isExist = false;
         JSONObject configJson = JSONObject.parseObject(subjectFormModel.getConfigJson());
         QueryWrapper<BusinessSubjectDO> queryFormWrapper = new QueryWrapper<>();
@@ -126,9 +126,9 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
             saveHandle(enterpriseId, projectId, subjectFormModel);
             //super.commit();
         } catch (Exception exception) {
-            log.error("保存表单字段配置信息异常, 异常原因：" + exception.getMessage());
+            log.error("保存表单字段配置信息异常, 异常原因：" + exception);
             //super.rollback();
-            return "****保存表单字段配置信息失败！****";
+            throw new Exception("保存表单字段配置信息异常" + exception);
         }
 
         return "保存表单字段配置信息成功！";
@@ -154,7 +154,6 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      * @return
      */
     private void saveHandle(Long enterpriseId, Long projectId, BusinessSubjectFormModel subjectFormModel) throws Exception {
-
         String configJson = subjectFormModel.getConfigJson();
         //字典字段配置
         List<FormDictModel> formDictModels = new ArrayList<>();
@@ -199,13 +198,14 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
             // 解析主表增加、修改字段
             addOrUpdateFormFieldsHandle(subjectFormModel.getSubjectId(), formTableId, formFields, formConfDOS, addFormFields, updateFormFields, deleteFormFields, formDictModels);
             log.info("--->主表新增字段列表：{}", JSONObject.toJSONString(addFormFields));
+            log.info("--->主表新增字典字段：{}", JSONObject.toJSONString(formDictModels));
             log.info("--->主表修改字段列表：{}", JSONObject.toJSONString(updateFormFields));
             //解析主表删除字段
             deleteFormFieldsHandle(formFields, formConfDOS, deleteFormFields);
             log.info("--->主表删除字段列表：{}", JSONObject.toJSONString(deleteFormFields));
 
             // 处理主表新增、删除、修改字段
-            updateFromConfigHandle(enterpriseId, projectId, 100, addFormFields, updateFormFields, deleteFormFields);
+            updateFromConfigHandle(enterpriseId, projectId, 100, addFormFields, updateFormFields, deleteFormFields, formDictModels);
 
             //如果该业务主题存在从表信息
             if (CollectionUtils.isNotEmpty(gridConfDOS)) {
@@ -320,9 +320,10 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      * @param addFormFields
      * @param updateFormFields
      * @param deleteFormFields
+     * @param formDictModels
      */
     private void updateFromConfigHandle(Long enterpriseId, Long projectId, int orderNo, List<FormFieldConfigModel> addFormFields, List<FormFieldConfigModel> updateFormFields,
-                                        List<Long> deleteFormFields) {
+                                        List<Long> deleteFormFields, List<FormDictModel> formDictModels) {
         //1. 处理新增的字段
         List<TemplateFormConfDO> addTemplateFormConfDOS = new ArrayList<>();
         for (FormFieldConfigModel model : addFormFields) {
@@ -349,6 +350,27 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
 
         iTemplateFormConfService.saveBatch(addTemplateFormConfDOS);
         log.info("--->主表已新增字段：{}", JSONObject.toJSONString(addTemplateFormConfDOS));
+
+        //字典字段配置
+        List<CfgFormDictDO> cfgFormDictDOS = new ArrayList<>();
+        int orderNumber = 1;
+        for (FormDictModel formDictModel : formDictModels) {
+            CfgFormDictDO cfgFormDictDO = new CfgFormDictDO();
+            cfgFormDictDO.setTableName(formDictModel.getTableName());
+            cfgFormDictDO.setFieldName(formDictModel.getFieldName());
+            cfgFormDictDO.setDictLabel(formDictModel.getDictLabel());
+            cfgFormDictDO.setDictValue(formDictModel.getDictValue());
+            cfgFormDictDO.setOrderNo(orderNumber);
+            cfgFormDictDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+            cfgFormDictDOS.add(cfgFormDictDO);
+            orderNumber++;
+        }
+
+        //保存表单字典配置字段信息
+        if (CollectionUtils.isNotEmpty(cfgFormDictDOS)) {
+            iCfgFormDictService.saveBatch(cfgFormDictDOS);
+            log.info("--->主表已新增表单字典配置字段：{}", JSONObject.toJSONString(cfgFormDictDOS));
+        }
 
         //2. 处理更新的字段
         List<TemplateFormConfDO> updateTemplateFormConfDOS = new ArrayList<>();
