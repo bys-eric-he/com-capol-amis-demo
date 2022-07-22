@@ -3,10 +3,13 @@ package com.capol.amis.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.capol.amis.entity.DatasetFieldDO;
+import com.capol.amis.entity.bo.DatasetFieldBasicBO;
 import com.capol.amis.service.IDatasetFieldService;
 import com.capol.amis.mapper.DatasetFieldMapper;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,5 +38,25 @@ public class DatasetFieldServiceImpl extends ServiceImpl<DatasetFieldMapper, Dat
                         )
                 ));
     }
+
+    /**
+     * 获取所有查询字段
+     * map(数据集ID, map(表ID, 数据集字段信息))
+     */
+    @Override
+    public Map<Long, Map<Long, List<DatasetFieldBasicBO>>> getAllDatasetFields() {
+        return baseMapper
+                .selectList(new LambdaQueryWrapper<DatasetFieldDO>().eq(DatasetFieldDO::getStatus, 1))
+                .stream().collect(Collectors.groupingBy(
+                                DatasetFieldDO::getDatasetId,
+                                Collectors.groupingBy(DatasetFieldDO::getTableId, Collectors.mapping(fieldDo -> {
+                                    DatasetFieldBasicBO basicBO = new DatasetFieldBasicBO();
+                                    BeanUtils.copyProperties(fieldDo, basicBO);
+                                    return basicBO;
+                                }, Collectors.toList()))
+                        )
+                );
+    }
+
 
 }

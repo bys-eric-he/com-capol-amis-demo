@@ -1,5 +1,6 @@
 package com.capol.amis.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.capol.amis.entity.DatasetUnionDO;
 import com.capol.amis.mapper.DatasetUnionMapper;
@@ -26,7 +27,12 @@ public class DatasetUnionServiceImpl extends ServiceImpl<DatasetUnionMapper, Dat
     @Override
     public Map<Long, List<DatasetUnionDO>> getAllUnionMap() {
         // map(datasetId, datalist)
-        return list(lambdaQuery().eq(DatasetUnionDO::getStatus, 1))
+        LambdaQueryWrapper<DatasetUnionDO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(DatasetUnionDO::getStatus, 1);
+        // return list(lambdaQuery().eq(DatasetUnionDO::getStatus, 1))
+        //         .stream()
+        //         .collect(Collectors.groupingBy(DatasetUnionDO::getDatasetId));
+        return list(queryWrapper)
                 .stream()
                 .collect(Collectors.groupingBy(DatasetUnionDO::getDatasetId));
     }

@@ -15,10 +15,14 @@ import java.util.Set;
 @Data
 @Accessors(chain = true)
 public class DatasetUnionBO {
+    /**
+     * 数据集Id
+     */
+    private Long datasetId;
     /** 左表信息 */
     private DatasetTableBasicBO leftTable;
     /** 右表关联关系 */
     private List<DatasetRightUnionBO> rightUnions;
     /** 查询字段(表id， 查询字段) */
-    private Map<Long, Set<Long>> datasetQueryFields;
+    private Map<Long, List<DatasetFieldBasicBO>> datasetQueryFields;
 }

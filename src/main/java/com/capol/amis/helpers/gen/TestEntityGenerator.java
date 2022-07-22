@@ -1,10 +1,15 @@
 package com.capol.amis.helpers.gen;
 
+import com.capol.amis.entity.DatasetUnionDO;
+import com.capol.amis.entity.TemplateFormDataDO;
 import com.capol.amis.entity.bo.DatasetRightUnionBO;
 import com.capol.amis.entity.bo.DatasetTableBasicBO;
 import com.capol.amis.entity.bo.DatasetUnionBO;
 import com.capol.amis.entity.bo.DatasetUnionFieldBO;
 import com.capol.amis.enums.TableRelationTypeEnum;
+import com.capol.amis.mapper.TemplateFormDataMapper;
+import com.capol.amis.service.IDatasetDataService;
+import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.SnowflakeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -25,49 +30,43 @@ public class TestEntityGenerator {
     @Autowired
     private SnowflakeUtil snowflakeUtil;
 
-    public DatasetUnionBO getDatasetUnion() {
+    @Autowired
+    private TemplateFormDataMapper templateFormDataMapper;
+
+    @Autowired
+    private IDatasetDataService datasetDataService;
+
+    public DatasetUnionDO buildUnionDO(long leftDataId, long rightDataId, long datasetId) {
+        TemplateFormDataDO source = templateFormDataMapper.selectById(leftDataId);
+        TemplateFormDataDO target = templateFormDataMapper.selectById(rightDataId);
+        DatasetUnionDO unionDO = new DatasetUnionDO();
+        unionDO.setId(snowflakeUtil.nextId());
+        unionDO.setDatasetId(datasetId);
+
         // 左表
-        DatasetTableBasicBO leftTable = new DatasetTableBasicBO()
-                .setTableId(328434438381764608L)
-                .setTableName("cfg_table_1745662207332353")
-                .setTableType(TableRelationTypeEnum.MAIN_TYPE);
-
+        unionDO.setSourceSubjectKey(source.getFieldKey());
+        unionDO.setSourceSubjectId(source.getSubjectId());
+        unionDO.setSourceTableId(source.getTableId());
+        unionDO.setSourceTableName(source.getTableName());
+        unionDO.setSourceFieldId(source.getTemplateId());
         // 右表
-        DatasetTableBasicBO rightTable = new DatasetTableBasicBO()
-                .setTableId(328465748152287232L)
-                .setTableName("cfg_table_1748490574143489")
-                .setTableType(TableRelationTypeEnum.MAIN_TYPE);
+        unionDO.setTargetSubjectKey(target.getFieldKey());
+        unionDO.setTargetSubjectId(target.getSubjectId());
+        unionDO.setTargetTableId(target.getTableId());
+        unionDO.setTargetTableName(target.getTableName());
+        unionDO.setTargetFieldId(target.getTemplateId());
+        unionDO.setTargetTableNameAlias("t_1");
 
-        // 关联
-        List<DatasetRightUnionBO> unionList = new ArrayList<>();
+        unionDO.setUnionType(1);
 
-        List<DatasetUnionFieldBO> unionFields = new ArrayList<>();
-        DatasetUnionFieldBO unionField = new DatasetUnionFieldBO()
-                .setLeftFieldName("creator_id").setRightFieldName("creator_id")
-                .setLeftTemplateId(328434439350648847L).setRightTemplateId(328465748643020806L);
+        unionDO.setOrderNo(1);
+        unionDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+        return unionDO;
+    }
 
-        unionFields.add(unionField);
-        DatasetRightUnionBO rightUnion = new DatasetRightUnionBO().setRightTable(rightTable).setUnionFields(unionFields);
-
-        unionList.add(rightUnion);
-        // 查询字段
-        Map<Long, Set<Long>> queryFiledsMap = new HashMap<>();
-        Set<Long> leftQueryFields = Stream.of(
-                        328434439350648865L,
-                        328434439350648867L,
-                        328434439350648861L,
-                        328434439350648863L
-                )
-                .collect(Collectors.toSet());
-        queryFiledsMap.put(328434438381764608L, leftQueryFields);
-        Set<Long> rightQueryFields = Stream.of(
-                        328465748643020828L,
-                        328465748643020826L,
-                        328465748643020824L)
-                .collect(Collectors.toSet());
-        queryFiledsMap.put(328465748152287232L, rightQueryFields);
-        // 查询信息
-        return new DatasetUnionBO().setLeftTable(leftTable).setRightUnions(unionList).setDatasetQueryFields(queryFiledsMap);
+    public DatasetUnionBO getDatasetUnion() {
+        List<DatasetUnionBO> unionFields = datasetDataService.getUnionFields();
+        return unionFields == null ? null : unionFields.get(0);
     }
 
     public List<Map<String, Object>> getMapList(int n) {

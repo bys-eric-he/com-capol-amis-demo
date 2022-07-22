@@ -40,6 +40,9 @@ public class TemplateFormDataServiceImpl
         return templateFormDataMapper.queryFromDataBySubjectId(subjectId);
     }
 
+    /**
+     * map(rowId, map(fieldId, 数据))
+     */
     @Override
     public Map<Long, Map<Long, Optional<TemplateDataBO>>> queryClassifiedFormDataByTableId(Long tableId) {
         return new LambdaQueryChainWrapper<>(templateFormDataMapper)

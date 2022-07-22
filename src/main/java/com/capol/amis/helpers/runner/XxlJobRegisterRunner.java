@@ -1,6 +1,7 @@
 package com.capol.amis.helpers.runner;
 
 import com.capol.amis.service.IDataSyncService;
+import com.capol.amis.utils.BaseInfoContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -21,6 +22,7 @@ public class XxlJobRegisterRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // TODO zyx 这里仅注册一个任务, 后续需要读取数据库中所有任务然后全部注册
-        dataSyncService.registerJobHandler("handler_1658112508");
+        Long enterpriseId = BaseInfoContextHolder.getEnterpriseAndProjectInfo().getEnterpriseId();
+        dataSyncService.registerJobHandler("handler_" + enterpriseId);
     }
 }

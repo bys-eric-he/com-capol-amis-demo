@@ -36,7 +36,6 @@ public class DataSyncPublisher {
                 }
             }
             if (!ack) {
-                System.out.println("cause=" + cause);
                 log.warn("==========>>>>>>>>>> rabbit数据未达exchange, 原因为:{}", cause);
             }
         });

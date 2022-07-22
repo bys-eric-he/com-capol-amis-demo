@@ -26,7 +26,7 @@ spring:
   datasource:
     druid:
       amis-demo:
-        url: jdbc:mysql://81.68.117.201:3306/db_amis_demo?characterEncoding=utf-8&useSSL=false
+        url: jdbc:mysql://81.68.117.201:3306/db_amis_demo?characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
         driver-class-name: com.mysql.cj.jdbc.Driver
         username: root
         password: 123321
@@ -44,7 +44,7 @@ spring:
         testOnBorrow: false
         testOnReturn: false
       qa-biz:
-        url: jdbc:mysql://10.1.207.12:3306/db_business?characterEncoding=utf-8&useSSL=false
+        url: jdbc:mysql://10.1.207.12:3306/db_business?characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
         driver-class-name: com.mysql.cj.jdbc.Driver
         username: business
         password: business_qa_2021
@@ -62,7 +62,7 @@ spring:
         testOnBorrow: false
         testOnReturn: false
       clickhouse:
-        driverClassName: ru.yandex.clickhouse.ClickHouseDriver
+        driverClassName: com.clickhouse.jdbc.ClickHouseDriver
         url: jdbc:clickhouse://81.68.117.201:8123/db_report
         username: root
         password: 123321

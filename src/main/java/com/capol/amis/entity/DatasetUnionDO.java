@@ -1,20 +1,23 @@
 package com.capol.amis.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.io.Serializable;
-import java.util.Date;
+import com.capol.amis.entity.base.BaseInfo;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 数据集关联表
+ *
  * @TableName t_dataset_union_324225698253233659
  */
-@TableName(value ="t_dataset_union_324225698253233659")
+@EqualsAndHashCode(callSuper = true)
+@TableName(value = "t_dataset_union")
 @Data
-public class DatasetUnionDO implements Serializable {
+public class DatasetUnionDO extends BaseInfo {
+    @TableField(exist = false)
+    private static final long serialVersionUID = 1L;
     /**
      * 主键Id
      */
@@ -91,51 +94,4 @@ public class DatasetUnionDO implements Serializable {
      */
     private Integer orderNo;
 
-    /**
-     * 状态 1:正常，0:删除
-     */
-    private Integer status;
-
-    /**
-     * 创建人
-     */
-    private String creator;
-
-    /**
-     * 创建人id
-     */
-    private Long creatorId;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 创建人IP
-     */
-    private String createdHostIp;
-
-    /**
-     * 最后操作人
-     */
-    private String lastOperator;
-
-    /**
-     * 最后操作人id
-     */
-    private Long lastOperatorId;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
-
-    /**
-     * 更新人IP
-     */
-    private String updateHostIp;
-
-    @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
 }

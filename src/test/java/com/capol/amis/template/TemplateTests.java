@@ -14,6 +14,7 @@ import org.springframework.util.StopWatch;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,12 +55,12 @@ public class TemplateTests extends AmisApplicationTests {
         List<Map<String, Object>> mapList3 = testEntityGenerator.getMapList(2000);
         List<Object[]> listObjs3 = listMap2ListObjs(testEntityGenerator.getMapList(2000));
 
-        TaskRunnerUtils.recordTask(sw, "task01", new Thread(() -> insertCkExecBps(sql, mapList1)));
-        TaskRunnerUtils.recordTask(sw, "task11", new Thread(() -> insertCkExecList(sql, listObjs1)));
-        TaskRunnerUtils.recordTask(sw, "task02", new Thread(() -> insertCkExecBps(sql, mapList2)));
-        TaskRunnerUtils.recordTask(sw, "task12", new Thread(() -> insertCkExecList(sql, listObjs2)));
-        TaskRunnerUtils.recordTask(sw, "task03", new Thread(() -> insertCkExecBps(sql, mapList3)));
-        TaskRunnerUtils.recordTask(sw, "task13", new Thread(() -> insertCkExecList(sql, listObjs3)));
+        TaskRunnerUtils.recordTask(sw, "task01", () -> insertCkExecBps(sql, mapList1));
+        // TaskRunnerUtils.recordTask(sw, "task11", () -> insertCkExecList(sql, listObjs1));
+        TaskRunnerUtils.recordTask(sw, "task02", () -> insertCkExecBps(sql, mapList2));
+        // TaskRunnerUtils.recordTask(sw, "task12", () -> insertCkExecList(sql, listObjs2));
+        TaskRunnerUtils.recordTask(sw, "task03", () -> insertCkExecBps(sql, mapList3));
+        // TaskRunnerUtils.recordTask(sw, "task13", () -> insertCkExecList(sql, listObjs3));
 
         TaskRunnerUtils.printStopWatch(sw);
     }
@@ -70,7 +71,7 @@ public class TemplateTests extends AmisApplicationTests {
             Object[] obj = new Object[map.size()];
             obj[0] = map.get("id");
             obj[1] = map.get("age");
-            obj[2] = map.get("creator");
+            obj[2] = map.get("creator1");
             obj[3] = map.get("creator_id");
             result.add(obj);
         });
@@ -83,7 +84,14 @@ public class TemplateTests extends AmisApplicationTests {
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ps.setLong(1, Long.parseLong((String) mapList.get(i).get("id")));
                 ps.setInt(2, Integer.parseInt((String) mapList.get(i).get("age")));
-                ps.setString(3, (String) mapList.get(i).get("creator"));
+                // 模拟取null过程
+                Object creator = mapList.get(i).get("creator1");
+                if (creator == null) {
+                    ps.setNull(3, Types.NULL);
+                } else {
+                    ps.setString(3, creator.toString());
+                }
+                //ps.setString(3, (String) mapList.get(i).get("creator"));
                 ps.setLong(4, Long.parseLong((String) mapList.get(i).get("creator_id")));
             }
             @Override

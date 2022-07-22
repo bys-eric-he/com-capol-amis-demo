@@ -10,8 +10,9 @@ import org.springframework.util.StopWatch;
 @Slf4j
 public class TaskRunnerUtils {
 
-    public static void recordTask(StopWatch sw, String taskName, Thread thread) {
+    public static void recordTask(StopWatch sw, String taskName, Runnable runnable) {
         sw.start(taskName);
+        Thread thread = new Thread(runnable);
         thread.start();
         try {
             thread.join();
@@ -23,8 +24,9 @@ public class TaskRunnerUtils {
 
     public static void printStopWatch(StopWatch sw) {
         for (StopWatch.TaskInfo taskInfo : sw.getTaskInfo()) {
-            log.info("==========>>>>>>>>>> task name: {} <<<<<<<<<<==========", taskInfo.getTaskName());
-            log.info("==========>>>>>>>>>> task cost: {} <<<<<<<<<<==========", taskInfo.getTimeMillis());
+            log.info("******************** task name: {} ********************", taskInfo.getTaskName());
+            log.info("==========>>>>>>>>>> task cost: {}ms <<<<<<<<<<==========", taskInfo.getTimeMillis());
+            log.info("==========>>>>>>>>>> task cost: {}ns <<<<<<<<<<==========", taskInfo.getTimeNanos());
         }
     }
 

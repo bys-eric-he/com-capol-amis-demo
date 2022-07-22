@@ -49,16 +49,17 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
     private Executor datasetServiceExecutor;
 
     @Override
-    public List<Map<Long, Object>> getUnionJoinDatas(DatasetUnionBO datasetUnion) {
+    public List<Map<String, Object>> getUnionJoinDatas(DatasetUnionBO datasetUnion) {
         // 依次获取关联
         DatasetTableBasicBO leftTable = datasetUnion.getLeftTable();
         Long leftTableId = leftTable.getTableId();
         List<DatasetRightUnionBO> rightUnions = datasetUnion.getRightUnions();
         // 查询字段
-        Map<Long, Set<Long>> queryFieldsMap = datasetUnion.getDatasetQueryFields();
+        // Map<Long, Set<Long>> queryFieldsMap = datasetUnion.getDatasetQueryFields();
+        Map<Long, List<DatasetFieldBasicBO>> queryFieldsMap = datasetUnion.getDatasetQueryFields();
 
         // ============================================ 获取左表详细信息 ============================================
-        // map(rowId, map(fieldName, data))
+        // map(rowId, map(fieldID, data))
         // 左表是主表数据
         Map<Long, Map<Long, Optional<TemplateDataBO>>> leftData = templateFormDataService.queryClassifiedFormDataByTableId(leftTableId);
 
@@ -66,8 +67,8 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
             return new ArrayList<>();
         }
 
-        Set<Long> leftQueryFields = queryFieldsMap.get(leftTableId);
-        Map<Long, Map<Long, Object>> leftQueryDatas = new ConcurrentHashMap<>();
+        List<DatasetFieldBasicBO> leftQueryFields = queryFieldsMap.get(leftTableId);
+        Map<Long, Map<String, Object>> leftQueryDatas = new ConcurrentHashMap<>();
 
         List<CompletableFuture<Void>> cfs = new CopyOnWriteArrayList<>();
 
@@ -80,7 +81,7 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
 
         // ============================================ 获取连接数据 ============================================
         // 可能有多个连接 -> list(map(左表rowid, list(map(右表字段, 右表数据))))
-        List<Map<Long, List<Map<Long, Object>>>> unionedDataList = new CopyOnWriteArrayList<>();
+        List<Map<Long, List<Map<String, Object>>>> unionedDataList = new CopyOnWriteArrayList<>();
 
         // 并行获取右侧连接数据
         List<CompletableFuture<Void>> unionCfs = rightUnions
@@ -100,7 +101,7 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
                     // 右表名
                     Long rightTableId = rightTable.getTableId();
                     // 右表查询字段
-                    Set<Long> rightQueryFields = queryFieldsMap.get(rightTableId);
+                    List<DatasetFieldBasicBO> rightQueryFields = queryFieldsMap.get(rightTableId);
                     // 右表数据
                     // TODO zyx 表格类型
                     // Map<Long, Map<String, Optional<TemplateFormDataDO>>> rightData = templateFormDataService.queryClassifiedFromDataByTableId(rightTableId);
@@ -128,26 +129,26 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
     /**
      * 拼接主表与关联数据
      */
-    private List<Map<Long, Object>> joinUnionData(Map<Long, Map<Long, Object>> leftQueryDatas,
-                                                  List<Map<Long, List<Map<Long, Object>>>> unionedDataList) {
-        List<Map<Long, Object>> resultListMap = new ArrayList<>();
+    private List<Map<String, Object>> joinUnionData(Map<Long, Map<String, Object>> leftQueryDatas,
+                                                  List<Map<Long, List<Map<String, Object>>>> unionedDataList) {
+        List<Map<String, Object>> resultListMap = new ArrayList<>();
         leftQueryDatas.forEach((leftRowId, leftDataMap) -> {
             // 获取右侧的数据
-            List<List<Map<Long, Object>>> listOfListMap = new ArrayList<>();
-            for (Map<Long, List<Map<Long, Object>>> unionedDatas : unionedDataList) {
-                List<Map<Long, Object>> unionedData = unionedDatas.get(leftRowId);
+            List<List<Map<String, Object>>> listOfListMap = new ArrayList<>();
+            for (Map<Long, List<Map<String, Object>>> unionedDatas : unionedDataList) {
+                List<Map<String, Object>> unionedData = unionedDatas.get(leftRowId);
                 if (unionedData != null) {
                     listOfListMap.add(unionedData);
                 }
             }
-            List<Map<Long, Object>> rightMapList = null;
+            List<Map<String, Object>> rightMapList = null;
             if (CollectionUtils.isNotEmpty(listOfListMap)) {
                 rightMapList = CapolListUtil.buildCartesianListMap(listOfListMap);
             }
             if (CollectionUtils.isNotEmpty(rightMapList)) { // 有右侧数据匹配
-                for (Map<Long, Object> rightMap : rightMapList) {
+                for (Map<String, Object> rightMap : rightMapList) {
                     // 不要直接操作 rightMap, 否则会
-                    Map<Long, Object> rightMapData = new HashMap<>(rightMap);
+                    Map<String, Object> rightMapData = new HashMap<>(rightMap);
                     rightMapData.putAll(leftDataMap);
                     resultListMap.add(rightMapData);
                 }
@@ -169,15 +170,15 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
      * @param rightQueryFields 右表查询字段
      * @return 关联后的数据 map(左表id, list(右表关联数据))
      */
-    private Map<Long, List<Map<Long, Object>>> getUnionDatas(Map<Long, Map<Long, Optional<TemplateDataBO>>> leftData,
-                                                             Map<Long, Map<Long, Optional<TemplateDataBO>>> rightData,
-                                                             Set<Long> leftFields,
-                                                             Map<Long, Long> unionMap,
-                                                             Set<Long> rightQueryFields) {
+    private Map<Long, List<Map<String, Object>>> getUnionDatas(Map<Long, Map<Long, Optional<TemplateDataBO>>> leftData,
+                                                               Map<Long, Map<Long, Optional<TemplateDataBO>>> rightData,
+                                                               Set<Long> leftFields,
+                                                               Map<Long, Long> unionMap,
+                                                               List<DatasetFieldBasicBO> rightQueryFields) {
         int unionSize = unionMap.size();
         // 左表的同一个rowId可能会匹配多条右表数据
-        // map(左表rowId, list(map(右表字段id, 右表数据)))
-        Map<Long, List<Map<Long, Object>>> unionDatas = new HashMap<>();
+        // map(左表rowId, list(map(右表字段, 右表数据)))
+        Map<Long, List<Map<String, Object>>> unionDatas = new HashMap<>();
         leftData.forEach((leftRowId, leftFieldDataMap) -> rightData.forEach((rightRowId, rightFieldDataMap) -> {
             int matched = 0;
             for (Long leftField : leftFields) {
@@ -197,13 +198,13 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
             }
             // 所有匹配字段的hash值相等时, 添加数据
             if (matched == unionSize) {
-                List<Map<Long, Object>> dataList = unionDatas.get(leftRowId);
+                List<Map<String, Object>> dataList = unionDatas.get(leftRowId);
                 if (dataList == null) {
                     dataList = new ArrayList<>();
                 }
-                Map<Long, Object> dataMap = new HashMap<>();
-                for (Long rightQueryField : rightQueryFields) {
-                    Optional<TemplateDataBO> formData = rightFieldDataMap.get(rightQueryField);
+                Map<String, Object> dataMap = new HashMap<>();
+                for (DatasetFieldBasicBO rightQueryField : rightQueryFields) {
+                    Optional<TemplateDataBO> formData = rightFieldDataMap.get(rightQueryField.getFieldId());
                     // TODO zyx 依据数据类型添加数据
                     formData.ifPresent(formDataDO -> {
                         Object fieldValue;
@@ -221,7 +222,7 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
                                 fieldValue = formDataDO.getFieldTextValue();
                                 break;
                         }
-                        dataMap.put(rightQueryField, fieldValue);
+                        dataMap.put(rightQueryField.getFieldNameAlias(), fieldValue);
                     });
                 }
                 dataList.add(dataMap);
@@ -235,16 +236,16 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
      * 获取左表所需字段的数据
      */
     private void getLeftDatas(Map<Long, Map<Long, Optional<TemplateDataBO>>> leftData,
-                              Set<Long> leftQueryFields,
-                              Map<Long, Map<Long, Object>> leftQueryDatas) {
+                              List<DatasetFieldBasicBO> leftQueryFields,
+                              Map<Long, Map<String, Object>> leftQueryDatas) {
         leftData.forEach((rowId, leftFieldDataMap) -> {
-            Map<Long, Object> leftQueryDataMap = new HashMap<>();
-            for (Long leftQueryField : leftQueryFields) {
-                Optional<TemplateDataBO> leftFormData = leftFieldDataMap.get(leftQueryField);
+            Map<String, Object> leftQueryDataMap = new HashMap<>();
+            for (DatasetFieldBasicBO leftQueryField : leftQueryFields) {
+                Optional<TemplateDataBO> leftFormData = leftFieldDataMap.get(leftQueryField.getFieldId());
                 if (!Objects.isNull(leftFormData)) {
-                    leftFormData.ifPresent(formDataDO -> leftQueryDataMap.put(leftQueryField, formDataDO.getFieldTextValue()));
+                    leftFormData.ifPresent(formDataDO -> leftQueryDataMap.put(leftQueryField.getFieldNameAlias(), formDataDO.getFieldTextValue()));
                 } else {
-                    log.error("数据表中{}行id为{}的字段不存在,请检查参数正确性", rowId, leftQueryField);
+                    log.error("数据表中{}行id为{}的字段不存在,请检查参数正确性", rowId, leftQueryField.getFieldId());
                 }
             }
             leftQueryDatas.put(rowId, leftQueryDataMap);
@@ -257,7 +258,7 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
     @Override
     public List<DatasetUnionBO> getUnionFields() {
         // 获取查询字段
-        Map<Long, Map<Long, Set<Long>>> allQueryFields = datasetFieldService.getQueryFields();
+        Map<Long, Map<Long, List<DatasetFieldBasicBO>>> allDatasetFields = datasetFieldService.getAllDatasetFields();
         // 表ID与表类型映射
         Map<Long, TableRelationTypeEnum> tableTypeMap = amisFormConfigSevice.getTableRelationType();
         // 一个数据集对应一个左表和若干个右表
@@ -303,10 +304,11 @@ public class DatasetDataServiceImpl implements IDatasetDataService {
                         rightUnion.setRightTable(rightTable).setUnionFields(rightUnionFields);
                         rightUnions.add(rightUnion);
                     });
-            datasetUnion.setLeftTable(leftTable)
-                    // TODO zyx 设置字段值
+            datasetUnion
+                    .setDatasetId(datasetId)
+                    .setLeftTable(leftTable)
                     .setRightUnions(rightUnions)
-                    .setDatasetQueryFields(allQueryFields.get(datasetId));
+                    .setDatasetQueryFields(allDatasetFields.get(datasetId));
             datasetUnions.add(datasetUnion);
         });
         return datasetUnions;

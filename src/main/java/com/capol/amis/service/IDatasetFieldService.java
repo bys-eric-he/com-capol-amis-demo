@@ -2,7 +2,9 @@ package com.capol.amis.service;
 
 import com.capol.amis.entity.DatasetFieldDO;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.capol.amis.entity.bo.DatasetFieldBasicBO;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,4 +16,6 @@ import java.util.Set;
 public interface IDatasetFieldService extends IService<DatasetFieldDO> {
 
     Map<Long, Map<Long, Set<Long>>> getQueryFields();
+
+    Map<Long, Map<Long, List<DatasetFieldBasicBO>>> getAllDatasetFields();
 }
