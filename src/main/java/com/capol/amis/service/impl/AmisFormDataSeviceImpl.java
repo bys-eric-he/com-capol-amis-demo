@@ -7,11 +7,13 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.capol.amis.entity.*;
+import com.capol.amis.enums.ComponentFieldEnum;
 import com.capol.amis.enums.SystemFieldEnum;
 import com.capol.amis.model.param.BusinessSubjectDataModel;
 import com.capol.amis.model.result.FormDataInfoModel;
 import com.capol.amis.model.result.GridDataInfoModel;
 import com.capol.amis.service.*;
+import com.capol.amis.utils.AmisUtil;
 import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.RowConvertColUtil;
 import com.capol.amis.utils.SnowflakeUtil;
@@ -68,6 +70,78 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
     private ITemplateGridDataService iTemplateGridDataService;
 
     /**
+     * 表单配置字典字段数据信表
+     */
+    @Autowired
+    private ICfgFormDictService iCfgFormDictService;
+
+    /**
+     * 文本字段类型
+     */
+    private static Map<String, String> INPUT_TYPE = new HashMap<>();
+
+    static {
+        INPUT_TYPE.put("input-text", null);
+    }
+
+    /**
+     * 选择字段类型
+     */
+    private static Map<String, String> SELECT_FIELD_TYPE = new HashMap<>();
+
+    static {
+        SELECT_FIELD_TYPE.put("checkbox", null);
+        SELECT_FIELD_TYPE.put("select", null);
+        SELECT_FIELD_TYPE.put("checkboxes", null);
+        SELECT_FIELD_TYPE.put("radios", null);
+    }
+
+    /**
+     * 日期字段类型
+     */
+    private static Map<String, String> DATE_FIELD_TYPE = new HashMap<>();
+
+    static {
+        DATE_FIELD_TYPE.put("input-date", null);
+        DATE_FIELD_TYPE.put("input-year", null);
+        DATE_FIELD_TYPE.put("input-month", null);
+        DATE_FIELD_TYPE.put("input-quarter", null);
+        DATE_FIELD_TYPE.put("input-date-range", null);
+        DATE_FIELD_TYPE.put("input-datetime-range", null);
+        DATE_FIELD_TYPE.put("input-month-range", null);
+        DATE_FIELD_TYPE.put("input-quarter-range", null);
+        DATE_FIELD_TYPE.put("input-datetime", null);
+    }
+
+    /**
+     * 系统更新字段
+     */
+    private static Map<String, String> SYS_PARAM_UPDATE = new HashMap<>();
+
+    static {
+        SYS_PARAM_UPDATE.put("last_operator", "lastOperator");
+        SYS_PARAM_UPDATE.put("last_operator_id", "lastOperatorId");
+        SYS_PARAM_UPDATE.put("update_time", "updateTime");
+        SYS_PARAM_UPDATE.put("update_host_ip", "updateHostIp");
+    }
+
+    /**
+     * 系统新增字段
+     */
+    private static Map<String, String> SYS_PARAM_ADD = new HashMap<>();
+
+    static {
+        SYS_PARAM_ADD.put("creator", "creator");
+        SYS_PARAM_ADD.put("creator_id", "creatorId");
+        SYS_PARAM_ADD.put("created_host_ip", "createdHostIp");
+        SYS_PARAM_ADD.put("last_operator", "lastOperator");
+        SYS_PARAM_ADD.put("last_operator_id", "lastOperatorId");
+        SYS_PARAM_ADD.put("update_host_ip", "updateHostIp");
+        SYS_PARAM_ADD.put("create_time", "createTime");
+        SYS_PARAM_ADD.put("update_time", "updateTime");
+    }
+
+    /**
      * 插入表单数据
      *
      * @param businessSubjectDataModel
@@ -90,6 +164,12 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             List<TemplateGridConfDO> templateGridConfDOS = iTemplateGridConfService.getFieldsBySubjectId(businessSubjectDataModel.getSubjectId());
             if (CollectionUtils.isEmpty(templateGridConfDOS)) {
                 log.warn("------业务主题：{} 从表没有配置信息!", businessSubjectDataModel.getSubjectId());
+            }
+
+            // 根据主表名称获取字典配置字段信息
+            List<CfgFormDictDO> cfgFormDictDOS = iCfgFormDictService.getDictByTableName(templateFormConfDOS.get(0).getTableName());
+            if (CollectionUtils.isEmpty(cfgFormDictDOS)) {
+                log.warn("------业务主题：{} 主表没有字典配置信息!", businessSubjectDataModel.getSubjectId());
             }
 
             JSONObject jsonObject = JSON.parseObject(businessSubjectDataModel.getDataJson());
@@ -130,10 +210,11 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
                             dataDO.setFieldKey(confDO.getFieldKey());
                             dataDO.setFieldName(column);
                             dataDO.setFieldType(confDO.getFieldType());
-                            dataDO.setFieldTextValue(value);
+                            dataDO.setFieldTextValue(setShowValue(confDO, cfgFormDictDOS, value));
                             dataDO.setFieldHashValue(HashUtil.mixHash(value));
                             dataDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
                             templateFormDataDOS.add(dataDO);
+
                         }
                     }
                 } else if (fieldKey.startsWith("table_") && dataValue instanceof JSONArray) {
@@ -461,6 +542,72 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
     }
 
     /**
+     * 设置展示字段值
+     *
+     * @param templateFormConfDO
+     * @param cfgFormDictDOS
+     * @param value
+     */
+    private String setShowValue(TemplateFormConfDO templateFormConfDO, List<CfgFormDictDO> cfgFormDictDOS, String value) {
+        String showValue = value;
+        if (cfgFormDictDOS != null && templateFormConfDO.getFieldName().contains("show")) {
+            if (SELECT_FIELD_TYPE.containsKey(templateFormConfDO.getComponentType())) {
+                //下拉字段处理
+                showValue = iCfgFormDictService.getDictLabel(cfgFormDictDOS, templateFormConfDO.getFieldName(), value);
+            }
+        }
+        return showValue;
+    }
+
+
+    /**
+     * 设置展示字段值
+     *
+     * @param subjectId
+     * @param templateFormConfDO
+     * @param cityValue
+     * @param value
+     * @param cfgFormDictDOS
+     * @param values
+     * @param configJson
+     */
+    private void setShowValue(Long subjectId, TemplateFormConfDO templateFormConfDO, String cityValue, String
+            value,
+                              List<CfgFormDictDO> cfgFormDictDOS, Map<String, String> values, String configJson) throws
+            Exception {
+        if (cfgFormDictDOS != null && templateFormConfDO.getFieldName().contains("show")) {
+            //设置日期展示字段
+            if (DATE_FIELD_TYPE.containsKey(templateFormConfDO.getComponentType())) {
+                values.put(templateFormConfDO.getTableName(), AmisUtil.getTransferValue(value, templateFormConfDO.getComponentType(), templateFormConfDO.getFieldKey(), configJson));
+            } else if (ComponentFieldEnum.INPUT_CITY.getValue().equals(templateFormConfDO.getComponentType())) {
+                //城市字段处理
+                values.put(templateFormConfDO.getFieldName(), cityValue);
+            } else if (SELECT_FIELD_TYPE.containsKey(templateFormConfDO.getComponentType())) {
+                //下拉字段处理
+                values.put(templateFormConfDO.getFieldName(), iCfgFormDictService.getDictLabel(cfgFormDictDOS, templateFormConfDO.getFieldName(), value));
+            } else if (ComponentFieldEnum.PICKER.getValue().equals(templateFormConfDO.getComponentType()) || ComponentFieldEnum.TREE_SELECT.getValue().equals(templateFormConfDO.getComponentType())) {
+                //项目台账处理 、组织架构处理
+                if (StringUtils.isNotBlank(value)) {
+                    List<String> ids = Arrays.asList(value.split(","));
+                    if (CollectionUtils.isNotEmpty(ids)) {
+                        List<Long> collect = ids.stream().map(id -> Long.valueOf(id)).collect(Collectors.toList());
+                        //下拉字段, 这里需要调接口获取，暂时设为空值
+                        values.put(templateFormConfDO.getFieldName(), "这里需要根据subjectID: " + subjectId + ", 调接口获取，暂时设为空值 !");
+                    }
+                } else {
+                    values.put(templateFormConfDO.getFieldName(), "");
+                }
+            }
+        } else {
+            if (INPUT_TYPE.containsKey(templateFormConfDO.getFieldType()) && null != templateFormConfDO.getFieldLength()
+                    && templateFormConfDO.getFieldLength() > 0 && StringUtils.isNotBlank(value) && value.length() > templateFormConfDO.getFieldLength()) {
+                throw new Exception(templateFormConfDO.getFieldAlias() + " 字段过长，请重新输入!!");
+            }
+            values.put(templateFormConfDO.getFieldName(), value);
+        }
+    }
+
+    /**
      * 构建主表系统字段
      *
      * @param subjectId
@@ -468,7 +615,8 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
      * @param templateFormDataDOS
      * @param templateFormConfDOS
      */
-    private void buildFormSystemDataFields(Long subjectId, Long rowId, List<TemplateFormDataDO> templateFormDataDOS, List<TemplateFormConfDO> templateFormConfDOS) {
+    private void buildFormSystemDataFields(Long subjectId, Long
+            rowId, List<TemplateFormDataDO> templateFormDataDOS, List<TemplateFormConfDO> templateFormConfDOS) {
         String[] columns = {"id", "status"};
         //添加系统字段数据
         for (SystemFieldEnum systemFieldEnum : getSystemFieldEnum()) {
@@ -537,7 +685,8 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
      * @param templateGridDataDOS
      * @param templateGridConfDOS
      */
-    private void buildGridSystemDataFields(Long subjectId, Long rowId, Long subRowId, String gridTableName, List<TemplateGridDataDO> templateGridDataDOS, List<TemplateGridConfDO> templateGridConfDOS) {
+    private void buildGridSystemDataFields(Long subjectId, Long rowId, Long subRowId, String
+            gridTableName, List<TemplateGridDataDO> templateGridDataDOS, List<TemplateGridConfDO> templateGridConfDOS) {
         String[] columns = {"id", "status"};
         //添加系统字段数据
         for (SystemFieldEnum systemFieldEnum : getSystemFieldEnum()) {
@@ -788,7 +937,7 @@ public class AmisFormDataSeviceImpl /*extends ServiceTransactionDefinition*/ imp
             log.info("-->主表数据：{}", JSONObject.toJSONString(formDataDOS));
             log.info("-->主表行数：{}", formCounts);
 
-            result.put("form_table",formDataDOS);
+            result.put("form_table", formDataDOS);
 
 
             QueryWrapper<TemplateGridDataDO> queryGridWrapper = new QueryWrapper<>();

@@ -51,6 +51,18 @@ public class FormFieldConfigModel {
     @NotNull(message = "字段是否允许为空不能为空!")
     private Integer fieldNull;
 
+    @ApiModelProperty(value = "字段数据类型(1、单一值; 2、原始值; 3、转换值)")
+    @NotNull(message = "字段数据类型不能为空!")
+    private Integer fieldDataType;
+
+    @ApiModelProperty(value = "字段来源类型(1、系统; 2、自定义)")
+    @NotNull(message = "字段来源类型不能为空!")
+    private Integer fieldSourceType;
+
+    @ApiModelProperty(value = "字段显示类型(1、显示; 2、隐藏)")
+    @NotNull(message = "字段显示类型不能为空!")
+    private Integer fieldShowType;
+
     @ApiModelProperty(value = "组件类型")
     @NotNull(message = "组件类型不能为空!")
     private String componentType;

@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.capol.amis.mapper.BusinessSubjectMapper">
+<mapper namespace="com.capol.amis.mapper.CfgFormDictMapper">
 
     <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.capol.amis.entity.BusinessSubjectDO">
+    <resultMap id="BaseResultMap" type="com.capol.amis.entity.CfgFormDictDO">
         <id column="id" property="id" />
-        <result column="enterprise_id" property="enterpriseId" />
-        <result column="project_id" property="projectId" />
-        <result column="subject_id" property="subjectId" />
-        <result column="subject_name" property="subjectName" />
-        <result column="config_json" property="configJson" />
+        <result column="table_name" property="tableName" />
+        <result column="field_name" property="fieldName" />
+        <result column="dict_label" property="dictLabel" />
+        <result column="dict_value" property="dictValue" />
+        <result column="order_no" property="orderNo" />
         <result column="status" property="status" />
         <result column="creator" property="creator" />
         <result column="creator_id" property="creatorId" />
@@ -24,11 +24,11 @@
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
         `id`,
-        `enterprise_id`,
-        `project_id`,
-        `subject_id`,
-        `subject_name`,
-        `config_json`,
+        `table_name`,
+        `field_name`,
+        `dict_label`,
+        `dict_value`,
+        `order_no`,
         `status`,
         `creator`,
         `creator_id`,
@@ -39,14 +39,14 @@
         `create_time`,
         `update_time`
     </sql>
-    <select id="getSubjectConfigJson" resultMap="BaseResultMap">
+    <select id="getDictByTableName" resultMap="BaseResultMap">
         SELECT
             `id`,
-            `enterprise_id`,
-            `project_id`,
-            `subject_id`,
-            `subject_name`,
-            `config_json`,
+            `table_name`,
+            `field_name`,
+            `dict_label`,
+            `dict_value`,
+            `order_no`,
             `status`,
             `creator`,
             `creator_id`,
@@ -57,10 +57,10 @@
             `create_time`,
             `update_time`
         FROM
-            cfg_business_subject
+            cfg_form_dict
         WHERE
             status = 1
-          AND subject_id =
-              #{subjectId}
+          AND table_name =
+              #{tableName}
     </select>
 </mapper>

@@ -55,25 +55,19 @@ CREATE TABLE `cfg_business_subject_324225698253233659`
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务主题基本信息';
 
+/*
+ * 表单字典表
+ * */
+DROP TABLE IF EXISTS `cfg_form_dict_324225698253233659`;
 
-/**
- * 业务主题表单配置表
- */
-DROP TABLE IF EXISTS `t_template_form_conf_324225698253233659`;
-
-CREATE TABLE `t_template_form_conf_324225698253233659`
+CREATE TABLE `cfg_form_dict_324225698253233659`
 (
     `id`               bigint(20) NOT NULL COMMENT '主键ID',
-    `enterprise_id`    bigint(20) NOT NULL COMMENT '企业ID',
-    `project_id`       bigint(20) NOT NULL COMMENT '项目ID',
-    `subject_id`       bigint(20) DEFAULT NULL COMMENT '业务主题ID',
-    `table_id`         bigint(20) DEFAULT NULL COMMENT '数据表ID',
-    `table_name`       varchar(200) DEFAULT NULL COMMENT '数据表名称',
-    `field_key`        varchar(200) DEFAULT NULL COMMENT '字段标识',
-    `field_alias`      varchar(200) DEFAULT NULL COMMENT '字段别名',
-    `field_name`       varchar(200) DEFAULT NULL COMMENT '字段名称',
-    `field_type`       varchar(20)  DEFAULT NULL COMMENT '字段类型',
-    `field_order`      int(10) DEFAULT 0 COMMENT '字段顺序',
+    `table_name`       varchar(100) DEFAULT NULL COMMENT '表名',
+    `field_name`       varchar(100) DEFAULT NULL COMMENT '字段名',
+    `dict_label`       varchar(50)  DEFAULT NULL COMMENT '字典标签',
+    `dict_value`       varchar(50)  DEFAULT NULL COMMENT '字典值',
+    `order_no`         smallint(10) DEFAULT NULL COMMENT '序号',
     `status`           tinyint(1) DEFAULT '1' COMMENT '1：正常，0：已删除',
     `creator`          varchar(20)  DEFAULT NULL COMMENT '创建人',
     `creator_id`       bigint(20) DEFAULT NULL COMMENT '创建人id',
@@ -83,6 +77,41 @@ CREATE TABLE `t_template_form_conf_324225698253233659`
     `update_host_ip`   varchar(50)  DEFAULT NULL COMMENT '更新人IP ',
     `create_time`      datetime     DEFAULT NOW() COMMENT '创建时间',
     `update_time`      datetime     DEFAULT NOW() COMMENT '更新时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT="表单字典表";
+
+
+/**
+ * 业务主题表单配置表
+ */
+DROP TABLE IF EXISTS `t_template_form_conf_324225698253233659`;
+
+CREATE TABLE `t_template_form_conf_324225698253233659`
+(
+    `id`                bigint(20) NOT NULL COMMENT '主键ID',
+    `enterprise_id`     bigint(20) NOT NULL COMMENT '企业ID',
+    `project_id`        bigint(20) NOT NULL COMMENT '项目ID',
+    `subject_id`        bigint(20) DEFAULT NULL COMMENT '业务主题ID',
+    `table_id`          bigint(20) DEFAULT NULL COMMENT '数据表ID',
+    `table_name`        varchar(200) DEFAULT NULL COMMENT '数据表名称',
+    `field_key`         varchar(200) DEFAULT NULL COMMENT '字段标识',
+    `field_alias`       varchar(200) DEFAULT NULL COMMENT '字段别名',
+    `field_name`        varchar(200) DEFAULT NULL COMMENT '字段名称',
+    `field_type`        varchar(20)  DEFAULT NULL COMMENT '字段类型',
+    `field_order`       int(10) DEFAULT 0 COMMENT '字段顺序',
+    `field_data_type`   smallint     DEFAULT NULL COMMENT '字段数据类型(1单一值;2原始值;3转换值)',
+    `field_show_type`   smallint     DEFAULT NULL COMMENT '字段显示类型(1显示;2隐藏)',
+    `field_source_type` smallint     DEFAULT NULL COMMENT '字段来源类型(1系统;2自定义)',
+    `component_type`    varchar(20)  DEFAULT NULL COMMENT '组件类型',
+    `status`            tinyint(1) DEFAULT '1' COMMENT '1：正常，0：已删除',
+    `creator`           varchar(20)  DEFAULT NULL COMMENT '创建人',
+    `creator_id`        bigint(20) DEFAULT NULL COMMENT '创建人id',
+    `created_host_ip`   varchar(50)  DEFAULT NULL COMMENT '创建人IP',
+    `last_operator`     varchar(20)  DEFAULT NULL COMMENT '最后操作人 ',
+    `last_operator_id`  bigint(20) DEFAULT NULL COMMENT '最后操作人id ',
+    `update_host_ip`    varchar(50)  DEFAULT NULL COMMENT '更新人IP ',
+    `create_time`       datetime     DEFAULT NOW() COMMENT '创建时间',
+    `update_time`       datetime     DEFAULT NOW() COMMENT '更新时间',
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='业务主题表单配置表';
 
@@ -106,6 +135,7 @@ CREATE TABLE `t_template_grid_conf_324225698253233659`
     `field_name`       varchar(200) DEFAULT NULL COMMENT '字段名称',
     `field_type`       varchar(20)  DEFAULT NULL COMMENT '字段类型',
     `field_order`      int(10) DEFAULT 0 COMMENT '字段顺序',
+    `component_type`   varchar(20)  DEFAULT NULL COMMENT '组件类型',
     `status`           tinyint(1) DEFAULT '1' COMMENT '1：正常，0：已删除',
     `creator`          varchar(20)  DEFAULT NULL COMMENT '创建人',
     `creator_id`       bigint(20) DEFAULT NULL COMMENT '创建人id',

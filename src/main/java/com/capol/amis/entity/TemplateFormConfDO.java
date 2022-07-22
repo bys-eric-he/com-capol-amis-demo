@@ -68,6 +68,21 @@ public class TemplateFormConfDO extends BaseInfo {
     private Integer fieldLength;
 
     /**
+     * 字段数据类型(1单一值;2原始值;3转换值)
+     */
+    private Integer fieldDataType;
+
+    /**
+     * 字段显示类型(1显示;2隐藏)
+     */
+    private Integer fieldShowType;
+
+    /**
+     * 字段来源类型(1系统;2自定义)
+     */
+    private Integer fieldSourceType;
+
+    /**
      * 字段顺序
      */
     private Integer fieldOrder;

@@ -170,6 +170,7 @@ public class MybatisPlusConfig {
         handlerMap.put("t_template_grid_conf", new EnterpriseTableNameParser());
         handlerMap.put("t_template_form_data", new EnterpriseTableNameParser());
         handlerMap.put("t_template_grid_data", new EnterpriseTableNameParser());
+        handlerMap.put("cfg_form_dict", new EnterpriseTableNameParser());
 
         DynamicTableNameInnerInterceptor dynamicTableNameInnerInterceptor = new DynamicTableNameInnerInterceptor();
         dynamicTableNameInnerInterceptor.setTableNameHandlerMap(handlerMap);

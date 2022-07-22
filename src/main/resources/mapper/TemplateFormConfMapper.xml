@@ -17,6 +17,9 @@
         <result column="field_length" property="fieldLength" />
         <result column="field_order" property="fieldOrder" />
         <result column="component_type" property="componentType" />
+        <result property="fieldDataType" column="field_data_type" jdbcType="TINYINT"/>
+        <result property="fieldShowType" column="field_show_type" jdbcType="TINYINT"/>
+        <result property="fieldSourceType" column="field_source_type" jdbcType="TINYINT"/>
         <result column="status" property="status" />
         <result column="creator" property="creator" />
         <result column="creator_id" property="creatorId" />
@@ -43,6 +46,9 @@
         `field_length`,
         `field_order`,
         `component_type`,
+        `field_data_type`,
+        `field_show_type`,
+        `field_source_type`,
         `status`,
         `creator`,
         `creator_id`,
@@ -69,6 +75,9 @@
             `field_length`,
             `field_order`,
             `component_type`,
+            `field_data_type`,
+            `field_show_type`,
+            `field_source_type`,
             `status`,
             `creator`,
             `creator_id`,

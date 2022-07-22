@@ -54,27 +54,25 @@ public class MyBatisPlusGenerator {
         dsConfig.setDbType(DbType.MYSQL)
                 .setDriverName("com.mysql.cj.jdbc.Driver")
                 //TODO  TODO  TODO  TODO
-                .setUrl("jdbc:mysql://10.1.164.157:3306/db_amis_demo?useSSL=false")
+                .setUrl("jdbc:mysql://81.68.117.201:3306/db_amis_demo?useSSL=false")
                 .setUsername("root")
-                .setPassword("root");
+                .setPassword("123321");
 
         //3. 策略配置globalConfiguration中
         StrategyConfig stConfig = new StrategyConfig();
 
         //全局大写命名
         stConfig.setCapitalMode(true)
-                // 数据库表映射到实体的命名策略
+                //数据库表映射到实体的命名策略
                 .setNaming(NamingStrategy.underline_to_camel)
-
                 //使用lombok
                 .setEntityLombokModel(true)
-
                 //使用restcontroller注解
                 .setRestControllerStyle(true)
-
                 // 生成的表, 支持多表一起生成，以数组形式填写
                 //TODO  TODO  TODO  TODO 两个方式，直接写，或者使用命令行输入
-                .setInclude("cfg_business_subject", "t_template_form_conf", "t_template_grid_conf", "t_template_form_data", "t_template_grid_data");
+                //.setInclude("cfg_business_subject", "t_template_form_conf", "t_template_grid_conf", "t_template_form_data", "t_template_grid_data");
+                .setInclude("cfg_form_dict_324225698253233659");
                 //.setInclude(scanner("请输入表名，多个英文逗号分割").split(","));
 
         //4. 包名策略配置

@@ -15,5 +15,10 @@ public interface IAmisFormConfigSevice {
      */
     String saveFormFieldConfig(BusinessSubjectFormModel subjectFormModel);
 
+    /**
+     * 获取配置表中，表ID与表类型关系
+     *
+     * @return
+     */
     Map<Long, TableRelationTypeEnum> getTableRelationType();
 }

@@ -105,7 +105,7 @@ spring:
 xxl:
   job:
     admin:
-      addresses: http://127.0.0.1:8080/xxl-job-admin
+      addresses: http://81.68.117.201:10086/xxl-job-admin
       username: admin
       password: 123456
     accessToken: default_token

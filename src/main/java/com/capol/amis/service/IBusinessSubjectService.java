@@ -12,4 +12,12 @@ import com.capol.amis.entity.BusinessSubjectDO;
  * @since 2022-06-28
  */
 public interface IBusinessSubjectService extends IService<BusinessSubjectDO> {
+
+    /**
+     * 根据业务主题ID获取表单配置JSON
+     *
+     * @param subjectId
+     * @return
+     */
+    String getConfigJson(Long subjectId);
 }

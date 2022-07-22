@@ -1,23 +1,21 @@
 package com.capol.amis.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.capol.amis.entity.BusinessSubjectDO;
+import com.capol.amis.entity.CfgFormDictDO;
 import com.capol.amis.entity.TemplateFormConfDO;
 import com.capol.amis.entity.TemplateGridConfDO;
 import com.capol.amis.entity.base.BaseInfo;
-import com.capol.amis.enums.ComponentFieldEnum;
-import com.capol.amis.enums.SystemFieldEnum;
-import com.capol.amis.enums.TableRelationTypeEnum;
+import com.capol.amis.enums.*;
 import com.capol.amis.mapper.TemplateFormConfMapper;
 import com.capol.amis.mapper.TemplateGridConfMapper;
+import com.capol.amis.model.FormDictModel;
 import com.capol.amis.model.param.BusinessSubjectFormModel;
 import com.capol.amis.model.param.FormFieldConfigModel;
 import com.capol.amis.model.param.GridFieldConfigModel;
-import com.capol.amis.service.IAmisFormConfigSevice;
-import com.capol.amis.service.IBusinessSubjectService;
-import com.capol.amis.service.ITemplateFormConfService;
-import com.capol.amis.service.ITemplateGridConfService;
+import com.capol.amis.service.*;
 import com.capol.amis.utils.AmisUtil;
 import com.capol.amis.utils.BaseInfoContextHolder;
 import com.capol.amis.utils.SnowflakeUtil;
@@ -43,22 +41,28 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
     private SnowflakeUtil snowflakeUtil;
 
     /**
-     * 业务主题基本信息 服务类
+     * 业务主题基本信息
      */
     @Autowired
     private IBusinessSubjectService iBusinessSubjectService;
 
     /**
-     * 业务主题表单配置表 服务类
+     * 业务主题表单配置表
      */
     @Autowired
     private ITemplateFormConfService iTemplateFormConfService;
 
     /**
-     * 业务主题列表配置表 服务类
+     * 业务主题列表配置表
      */
     @Autowired
     private ITemplateGridConfService iTemplateGridConfService;
+
+    /**
+     * 表单配置字典字段数据信表
+     */
+    @Autowired
+    private ICfgFormDictService iCfgFormDictService;
 
     @Autowired
     private TemplateFormConfMapper templateFormConfMapper;
@@ -131,7 +135,7 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
     }
 
     /**
-     * 获取表ID与表类型关系
+     * 获取配置表中，表ID与表类型关系
      */
     @Override
     public Map<Long, TableRelationTypeEnum> getTableRelationType() {
@@ -152,6 +156,9 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
     private void saveHandle(Long enterpriseId, Long projectId, BusinessSubjectFormModel subjectFormModel) throws Exception {
 
         String configJson = subjectFormModel.getConfigJson();
+        //字典字段配置
+        List<FormDictModel> formDictModels = new ArrayList<>();
+
         // 主表(表单)字段
         List<JSONObject> formFields = new ArrayList<>();
 
@@ -190,7 +197,7 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
         // 如果存在该业务主题的表单信息，说明是修改表单操作。
         if (CollectionUtils.isNotEmpty(formConfDOS)) {
             // 解析主表增加、修改字段
-            addOrUpdateFormFieldsHandle(subjectFormModel.getSubjectId(), formTableId, formFields, formConfDOS, addFormFields, updateFormFields, deleteFormFields);
+            addOrUpdateFormFieldsHandle(subjectFormModel.getSubjectId(), formTableId, formFields, formConfDOS, addFormFields, updateFormFields, deleteFormFields, formDictModels);
             log.info("--->主表新增字段列表：{}", JSONObject.toJSONString(addFormFields));
             log.info("--->主表修改字段列表：{}", JSONObject.toJSONString(updateFormFields));
             //解析主表删除字段
@@ -213,21 +220,40 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
 
             // 处理从表新增、删除、修改字段
             updateGridConfigHandle(enterpriseId, projectId, 100, addGridFields, updateGridFields, deleteGridFields);
-
             log.info("表单 {} 配置信息，更新完成!", subjectFormModel.getSubjectId());
-
         } else {
             // 处理主表数据
-            List<FormFieldConfigModel> formFieldConfigModels = formTableHandle(formTableId, subjectFormModel, formFields);
+            List<FormFieldConfigModel> formFieldConfigModels = formTableHandle(formTableId, subjectFormModel, formFields, formDictModels);
             log.info("-->主表字段信息：" + JSONObject.toJSONString(formFieldConfigModels));
+            log.info("-->主表字典字段信息：" + JSONObject.toJSONString(formDictModels));
 
             // 处理从表数据
             List<GridFieldConfigModel> gridFieldConfigModels = gridTableHandle(formTableId, subjectFormModel, gridFields);
             log.info("-->从表字段信息：" + JSONObject.toJSONString(gridFieldConfigModels));
 
+            //字典字段配置
+            List<CfgFormDictDO> cfgFormDictDOS = new ArrayList<>();
+            int orderNumber = 1;
+            for (FormDictModel formDictModel : formDictModels) {
+                CfgFormDictDO cfgFormDictDO = new CfgFormDictDO();
+                cfgFormDictDO.setTableName(formDictModel.getTableName());
+                cfgFormDictDO.setFieldName(formDictModel.getFieldName());
+                cfgFormDictDO.setDictLabel(formDictModel.getDictLabel());
+                cfgFormDictDO.setDictValue(formDictModel.getDictValue());
+                cfgFormDictDO.setOrderNo(orderNumber);
+                cfgFormDictDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
+                cfgFormDictDOS.add(cfgFormDictDO);
+                orderNumber++;
+            }
+
+            //保存表单字典配置字段信息
+            if (CollectionUtils.isNotEmpty(cfgFormDictDOS)) {
+                iCfgFormDictService.saveBatch(cfgFormDictDOS);
+                log.info("保存表单字典配置字段信息完成!");
+            }
+
             List<TemplateFormConfDO> templateFormConfDOS = new ArrayList<>();
             int orderNo = 1;
-
             for (FormFieldConfigModel model : formFieldConfigModels) {
                 TemplateFormConfDO templateFormConfDO = new TemplateFormConfDO();
                 templateFormConfDO.setEnterpriseId(enterpriseId);
@@ -242,12 +268,19 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
                 templateFormConfDO.setFieldType(model.getFieldType());
                 templateFormConfDO.setFieldLength(model.getFieldLength());
                 templateFormConfDO.setComponentType(model.getComponentType());
+                templateFormConfDO.setFieldDataType(model.getFieldDataType());
+                templateFormConfDO.setFieldShowType(model.getFieldShowType());
+                templateFormConfDO.setFieldSourceType(model.getFieldSourceType());
                 templateFormConfDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
                 templateFormConfDOS.add(templateFormConfDO);
                 orderNo++;
             }
 
-            iTemplateFormConfService.saveBatch(templateFormConfDOS);
+            //保存主表配置信息
+            if (CollectionUtils.isNotEmpty(templateFormConfDOS)) {
+                iTemplateFormConfService.saveBatch(templateFormConfDOS);
+                log.info("保存主表配置信息完成!");
+            }
 
             List<TemplateGridConfDO> templateGridConfDOS = new ArrayList<>();
             for (GridFieldConfigModel model : gridFieldConfigModels) {
@@ -269,8 +302,12 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
                 templateGridConfDOS.add(templateGridConfDO);
             }
 
-            iTemplateGridConfService.saveBatch(templateGridConfDOS);
-            log.info("新增表单配置信息，保存完成!");
+            //保存从表配置信息
+            if (CollectionUtils.isNotEmpty(templateGridConfDOS)) {
+                iTemplateGridConfService.saveBatch(templateGridConfDOS);
+                log.info("保存从表配置信息完成!");
+            }
+            log.info("新增表单配置信息，保存完成!!!");
         }
     }
 
@@ -302,6 +339,9 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
             templateFormConfDO.setFieldType(model.getFieldType());
             templateFormConfDO.setFieldLength(model.getFieldLength());
             templateFormConfDO.setComponentType(model.getComponentType());
+            templateFormConfDO.setFieldDataType(model.getFieldDataType());
+            templateFormConfDO.setFieldShowType(model.getFieldShowType());
+            templateFormConfDO.setFieldSourceType(model.getFieldSourceType());
             templateFormConfDO.setSystemInfo(BaseInfoContextHolder.getSystemInfo());
             addTemplateFormConfDOS.add(templateFormConfDO);
             orderNo++;
@@ -446,8 +486,9 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      * @param formTableId
      * @param subjectFormModel
      * @param formFields
+     * @param formDictModels
      */
-    private List<FormFieldConfigModel> formTableHandle(Long formTableId, BusinessSubjectFormModel subjectFormModel, List<JSONObject> formFields) {
+    private List<FormFieldConfigModel> formTableHandle(Long formTableId, BusinessSubjectFormModel subjectFormModel, List<JSONObject> formFields, List<FormDictModel> formDictModels) {
         //主表字段
         List<FormFieldConfigModel> mainFields = new ArrayList<>();
         //主表表名
@@ -457,7 +498,7 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
         if (CollectionUtils.isNotEmpty(formFields)) {
             formFields.forEach(jsonObject -> {
                 //根据组件类型构建字段Model
-                buildFormFields(subjectFormModel.getSubjectId(), formTableId, formTableName, mainFields, jsonObject);
+                buildFormFields(subjectFormModel.getSubjectId(), formTableId, formTableName, mainFields, formDictModels, jsonObject);
             });
         }
 
@@ -514,10 +555,11 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      * @param addFields
      * @param updateFields
      * @param deleteFields
+     * @param formDictModels
      */
     private void addOrUpdateFormFieldsHandle(Long subjectId, Long formTableId, List<JSONObject> formFields, List<TemplateFormConfDO> formFieldsDB,
                                              List<FormFieldConfigModel> addFields, List<FormFieldConfigModel> updateFields,
-                                             List<Long> deleteFields) throws Exception {
+                                             List<Long> deleteFields, List<FormDictModel> formDictModels) throws Exception {
         if (CollectionUtils.isEmpty(formFields)) {
             throw new Exception("表单组件不能为空，请重新检查再提交!");
         }
@@ -532,7 +574,7 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
                     .contains(key)) {
                 //新增字段
                 log.info("-----主表有新增字段-----");
-                buildFormFields(subjectId, formTableId, formTableName, addFields, jsonObject);
+                buildFormFields(subjectId, formTableId, formTableName, addFields, formDictModels, jsonObject);
                 log.info("字段信息：{}", key);
             } else {
                 //修改字段
@@ -544,7 +586,7 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
                         log.info("-----主表有修改字段，控件类型有改变-----");
                         log.info("原值：{}", templateFormConfDO.getComponentType());
                         //新增字段
-                        buildFormFields(subjectId, formTableId, formTableName, addFields, jsonObject);
+                        buildFormFields(subjectId, formTableId, formTableName, addFields, formDictModels, jsonObject);
                         //逻辑删除原字段
                         List<Long> delFieldIds = formFieldsDB.stream().filter(item -> key.equals(item.getFieldKey()))
                                 .map(BaseInfo::getId).collect(Collectors.toList());
@@ -791,10 +833,11 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      * @param formTableId
      * @param formTableName
      * @param mainFields
+     * @param formDictModels
      * @param jsonObject
      */
     private void buildFormFields(Long subjectId, Long formTableId, String formTableName,
-                                 List<FormFieldConfigModel> mainFields, JSONObject jsonObject) {
+                                 List<FormFieldConfigModel> mainFields, List<FormDictModel> formDictModels, JSONObject jsonObject) {
         Long number = snowflakeUtil.nextId();
         String type = jsonObject.getString(AmisUtil.TYPE);
         ComponentFieldEnum fieldEnum = ComponentFieldEnum.getEnumByType(type);
@@ -806,7 +849,7 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
             }
             case 2: {
                 // 选项下拉类
-                log.info("选项下拉类,暂不支持!!!");
+                buildFormSelectFieldModel(subjectId, formTableId, formTableName, number, fieldEnum, mainFields, formDictModels, jsonObject);
                 break;
             }
             case 3: {
@@ -859,17 +902,84 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
     private void buildFormTextFieldModel(Long subjectId, Long formTableId, String formTableName, Long number,
                                          ComponentFieldEnum fieldEnum, List<FormFieldConfigModel> mainFields,
                                          JSONObject jsonObject) {
+        //字段名称
         String fieldName = "column_" + number;
+        //字段数据类型(1、单一值 2、原始值 3、转换值)
+        Integer fieldDataType = FieldDataTypeEnum.ORIGINAL.getValue();
+        // 字段显示类型(1、显示 2、隐藏)
+        Integer fieldShowType = FieldShowTypeEnum.HIDE.getValue();
+        // 字段来源类型(1、系统 2、自定义)
+        Integer fieldSourceType = FieldSourceTypeEnum.SELF_DEFINED.getValue();
         //是否有设置度度，有的话取设置的长度
         Integer maxLength = AmisUtil.getMaxLength(jsonObject);
         Integer fieldLength = maxLength == null ? fieldEnum.getFieldLength() : maxLength;
 
         //构建Model
         FormFieldConfigModel fieldConfigModel = buildFormFieldConfigModel(subjectId, formTableId, formTableName,
-                jsonObject, fieldName, fieldEnum, fieldLength);
+                jsonObject, fieldName, fieldEnum, fieldDataType, fieldShowType, fieldSourceType, fieldLength);
 
         mainFields.add(fieldConfigModel);
     }
+
+    /**
+     * 构建下拉类字段
+     *
+     * @param subjectId
+     * @param formTableId
+     * @param formTableName
+     * @param number
+     * @param fieldEnum
+     * @param mainFields
+     * @param dictModels
+     * @param jsonObject
+     */
+    private void buildFormSelectFieldModel(Long subjectId, Long formTableId, String formTableName, Long number,
+                                           ComponentFieldEnum fieldEnum, List<FormFieldConfigModel> mainFields,
+                                           List<FormDictModel> dictModels, JSONObject jsonObject) {
+        //字段名称
+        String fieldName = "column_" + number;
+        //字段数据类型(1、单一值 2、原始值 3、转换值)
+        Integer fieldDataType = FieldDataTypeEnum.ORIGINAL.getValue();
+        // 字段显示类型(1、显示 2、隐藏)
+        Integer fieldShowType = FieldShowTypeEnum.HIDE.getValue();
+        // 字段来源类型(1、系统 2、自定义)
+        Integer fieldSourceType = FieldSourceTypeEnum.SELF_DEFINED.getValue();
+        //是否有设置度度，有的话取设置的长度
+        Integer maxLength = AmisUtil.getMaxLength(jsonObject);
+        Integer fieldLength = maxLength == null ? fieldEnum.getFieldLength() : maxLength;
+
+        //构建Model
+        FormFieldConfigModel fieldConfigModel = buildFormFieldConfigModel(subjectId, formTableId, formTableName,
+                jsonObject, fieldName, fieldEnum, fieldDataType, fieldShowType, fieldSourceType, fieldLength);
+
+        mainFields.add(fieldConfigModel);
+
+        //构建show Model
+        FormFieldConfigModel showFieldConfigModel = new FormFieldConfigModel();
+        BeanCopier formBeanCopier = BeanCopier.create(FormFieldConfigModel.class, FormFieldConfigModel.class, false);
+        formBeanCopier.copy(fieldConfigModel, showFieldConfigModel, null);
+
+        showFieldConfigModel.setFieldName("column_show_" + number);
+        showFieldConfigModel.setFieldDataType(FieldDataTypeEnum.TRANSFORM.getValue());
+        showFieldConfigModel.setFieldShowType(FieldShowTypeEnum.SHOW.getValue());
+
+        mainFields.add(showFieldConfigModel);
+
+        //构建表单常量
+        JSONArray selectOptions = AmisUtil.getSelectOptions(jsonObject);
+        if (CollectionUtils.isNotEmpty(selectOptions)) {
+            for (Object selectOption : selectOptions) {
+                JSONObject object = (JSONObject) selectOption;
+                FormDictModel formDictModel = new FormDictModel();
+                formDictModel.setTableName(formTableName);
+                formDictModel.setFieldName("column_" + number);
+                formDictModel.setDictLabel(object.getString(AmisUtil.LABEL));
+                formDictModel.setDictValue(object.getString(AmisUtil.VALUE));
+                dictModels.add(formDictModel);
+            }
+        }
+    }
+
 
     /**
      * 构建文本类字段
@@ -906,12 +1016,16 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
      * @param jsonObject
      * @param fieldName
      * @param fieldEnum
+     * @param fieldDataType
+     * @param fieldShowType
+     * @param fieldSourceType
      * @param fieldLength
      * @return
      */
     private FormFieldConfigModel buildFormFieldConfigModel(Long subjectId, Long formTableId, String formTableName,
                                                            JSONObject jsonObject, String fieldName, ComponentFieldEnum fieldEnum,
-                                                           Integer fieldLength) {
+                                                           Integer fieldDataType, Integer fieldShowType,
+                                                           Integer fieldSourceType, Integer fieldLength) {
         FormFieldConfigModel fieldConfigModel = new FormFieldConfigModel();
         fieldConfigModel.setSubjectId(subjectId);
         fieldConfigModel.setTableId(formTableId);
@@ -932,6 +1046,9 @@ public class AmisFormConfigSeviceImpl /*extends ServiceTransactionDefinition*/ i
         fieldConfigModel.setFieldType(fieldEnum.getFieldType());
         fieldConfigModel.setFieldName(fieldName);
         fieldConfigModel.setFieldLength(fieldLength);
+        fieldConfigModel.setFieldDataType(fieldDataType);
+        fieldConfigModel.setFieldShowType(fieldShowType);
+        fieldConfigModel.setFieldSourceType(fieldSourceType);
         fieldConfigModel.setComponentType(fieldEnum.getValue());
 
         return fieldConfigModel;

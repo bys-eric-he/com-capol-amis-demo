@@ -2,6 +2,7 @@ package com.capol.amis.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.capol.amis.entity.BusinessSubjectDO;
+import io.lettuce.core.dynamic.annotation.Param;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -14,6 +15,12 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface BusinessSubjectMapper extends BaseMapper<BusinessSubjectDO> {
-
+    /**
+     * 根据业务主题ID获取该业务主题表单配置JSON
+     *
+     * @param subjectId
+     * @return
+     */
+    BusinessSubjectDO getSubjectConfigJson(@Param("subjectId") Long subjectId);
 }
 
